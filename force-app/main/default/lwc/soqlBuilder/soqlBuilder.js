@@ -217,17 +217,31 @@ export default class SoqlBuilder extends LightningElement {
       });
   }
 
-  wiredParentRels({ data }) {
-    this.parentRelationshipOptions = data.map(/* … */);
-    this.filteredParentRelOptions = [...this.parentRelationshipOptions];
-  }
 
-  // After loading parent fields:
-  fetchParentFields(/* … */) {
-    // … on success:
+
+  fetchParentFields(parentObjectName, relationshipName) {
+  if (!parentObjectName) return;
+
+  getFieldsForObject({ objectApiName: parentObjectName }).then((fields) => {
+    if (!Array.isArray(fields) || fields.length === 0) {
+      console.warn("⚠️ No fields returned for parent object:", parentObjectName);
+      this.parentFieldOptions = [];
+      return;
+    }
+
+    const optionsList = fields.map((f) => {
+      const fullName = `${relationshipName}.${f.name}`;
+      console.log("✅ Parent field option:", fullName);
+      return {
+        label: f.label || f.name,
+        value: fullName
+      };
+    });
+
     this.parentFieldOptions = optionsList;
     this.filteredParentFieldOptions = [...optionsList];
-  }
+  });
+}
 
   handleRelationshipSelection(event) {
     const newSelection = event.detail.value;
@@ -284,13 +298,22 @@ export default class SoqlBuilder extends LightningElement {
   }
 
   handleFieldSelection(event) {
-    const incoming = event.detail?.value || [];
+  const incoming = event.detail?.value || [];
 
-    // Apply validated selections
-    const validSet = new Set(this.fieldOptions.map((o) => o.value));
-    this.selectedFields = incoming.filter((v) => validSet.has(v));
-    this.updatePreview();
-  }
+  const validSet = new Set(this.fieldOptions.map((o) => o.value));
+  const expandedFields = incoming.flatMap((field) => {
+    if (!validSet.has(field)) return [];
+
+    const fieldType = this.fieldMetadata[field];
+    if (fieldType === "Reference") {
+      return [`${field}.Name`];
+    }
+    return [field];
+  });
+
+  this.selectedFields = expandedFields;
+  this.updatePreview();
+}
 
   handleFilterChange(event) {
     const index = parseInt(event.currentTarget.dataset.index, 10);
@@ -455,6 +478,7 @@ export default class SoqlBuilder extends LightningElement {
   }
 
   handleParentSelect(event) {
+    console.log("📥 handleParentSelect fired with:", event.detail.value);
     try {
       this.selectedParent = event.detail.value || "";
       this.selectedParentObject = parentFieldManager.resolveParentObject(
@@ -482,6 +506,7 @@ export default class SoqlBuilder extends LightningElement {
   }
 
   handleParentFieldChange(event) {
+    console.log("🔎 Raw parent field selection:", event.detail.value);
     this.selectedParentFields = event.detail.value;
     this.updatePreview();
   }
@@ -639,31 +664,37 @@ export default class SoqlBuilder extends LightningElement {
 
   //--------FETCHES--------------------
   fetchParentFields(parentObjectName, relationshipName) {
-    if (!parentObjectName) return;
+  if (!parentObjectName) return;
 
-    getFieldsForObject({ objectApiName: parentObjectName }).then((fields) => {
-      if (!Array.isArray(fields) || fields.length === 0) {
-        console.warn(
-          "⚠️ No fields returned for parent object:",
-          parentObjectName
-        );
-        this.parentFieldOptions = [];
-        return;
-      }
+  getFieldsForObject({ objectApiName: parentObjectName }).then((fields) => {
+    if (!Array.isArray(fields) || fields.length === 0) {
+      console.warn("⚠️ No fields returned for parent object:", parentObjectName);
+      this.parentFieldOptions = [];
+      return;
+    }
 
-      this.parentFieldOptions = fields
-        .map((f) => ({
+    this.parentFieldOptions = fields
+      .map((f) => {
+        const fullName = `${relationshipName}.${f.name}`;
+        console.log("✅ Parent field option:", fullName);
+        return {
           label: f.label || f.name,
-          value: `${relationshipName}.${f.name}`
-        }))
-        .sort((a, b) =>
-          a.label.localeCompare(b.label, undefined, {
-            numeric: true,
-            sensitivity: "base"
-          })
-        );
-    });
-  }
+          value: fullName
+        };
+      })
+      .sort((a, b) =>
+        a.label.localeCompare(b.label, undefined, {
+          numeric: true,
+          sensitivity: "base"
+        })
+      );
+
+    this.filteredParentFieldOptions = [...this.parentFieldOptions];
+
+    // 🔍 Add this log here
+    console.log("🧾 Dual listbox options:", JSON.stringify(this.filteredParentFieldOptions, null, 2));
+  });
+}
 
   fetchChildRelationships() {
     getChildRelationships({ objectApiName: this.selectedObject })
@@ -756,14 +787,16 @@ export default class SoqlBuilder extends LightningElement {
     return this.parentRelationshipOptions?.length > 0;
   }
 
-  get openChildSections(){
+  get openChildSections() {
     return this.selectedRelationships || [];
   }
 
   get shouldShowParentSection() {
-  return this.selectedObject && (this.hasParentOptions || this.selectedParent);
-}
-get shouldShowChildSection(){
-  return this.selectedObject && thischildFieldConfigs;
-}
+    return (
+      this.selectedObject && (this.hasParentOptions || this.selectedParent)
+    );
+  }
+  get shouldShowChildSection() {
+    return this.selectedObject && thischildFieldConfigs;
+  }
 }

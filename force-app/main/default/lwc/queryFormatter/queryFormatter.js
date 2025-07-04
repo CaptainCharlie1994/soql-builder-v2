@@ -24,13 +24,14 @@ export default class queryFormatter {
     if (!selectedObject || selectedFields.length === 0) {
       return null;
     }
-
+    console.log("Pre Based Fields: Selected Parent Fields:", JSON.stringify(selectedParentFields));
     //── Combine base fields, parent fields, and filter fields ─────────────
     const baseFields = new Set([
       ...(selectedFields || []),
       ...(selectedParentFields || []),
       ...filters.map((f) => f.field).filter(Boolean)
     ]);
+    console.log("Post Base Fields: Selected Parent Fields:", JSON.stringify(selectedParentFields));
 
     const fieldList = Array.from(baseFields).join(", ");
 

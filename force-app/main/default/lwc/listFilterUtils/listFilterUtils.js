@@ -9,6 +9,8 @@
  */
 export function filterOptions(options = [], searchTerm = '') {
   const term = (searchTerm || '').trim().toLowerCase();
+  console.log("📦 parentFieldOptions:", JSON.stringify(this.parentFieldOptions, null, 2));
+  console.log("📦 parentFieldOptions:", JSON.stringify(Options, null, 2));
   if (!term) {
     return options;
   }
