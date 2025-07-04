@@ -3,6 +3,8 @@ export function formatFilterValue(fieldApiName, fieldType, value) {
 
   const clean = value.toString().trim();
 
+  if(clean.toLowerCase() === 'null') return null;
+
   switch (fieldType) {
     case 'Boolean':
     case 'Checkbox':
@@ -25,6 +27,7 @@ export function formatFilterValue(fieldApiName, fieldType, value) {
     case 'Integer':
     case 'Long':
     case 'Percent':
+    case 'null':
       return clean;
 
     default:

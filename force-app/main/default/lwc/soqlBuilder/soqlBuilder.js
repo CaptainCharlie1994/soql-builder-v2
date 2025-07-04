@@ -151,8 +151,6 @@ export default class SoqlBuilder extends LightningElement {
               sensitivity: "base"
             })
           );
-        console.log("Soql Preview Value: " + this.soqlPreview);
-        console.log("queryResults:", this.queryResults);
         this.updatePreview();
       })
       .catch((error) => {
@@ -460,10 +458,6 @@ export default class SoqlBuilder extends LightningElement {
     this.showToast("info", "Preparing CSV for export...", "info");
 
     try {
-      debugFormatter.log("⚙️ Pre-flatten rawResult", this.rawResult);
-      debugFormatter.log("Selected parent fields", this.selectedParentFields);
-      debugFormatter.log("Selected child fields", this.selectedChildFields);
-
       const { rows, headers } = resultFlattener.flattenResults(
         this.rawResult,
         this.selectedParentFields,
@@ -471,7 +465,6 @@ export default class SoqlBuilder extends LightningElement {
       );
       const cleanData = JSON.parse(JSON.stringify(rows));
       const cleanHeaders = JSON.parse(JSON.stringify(headers));
-      const payloadSize = JSON.stringify(cleanData).length;
 
       const result = await emailCsv({
         objectName: this.selectedObject,
@@ -479,9 +472,7 @@ export default class SoqlBuilder extends LightningElement {
         headers: cleanHeaders,
         recipientEmail: this.userEmail
       });
-      debugFormatter.log("Email Address3 : ", this.userEmail);
-      debugFormatter.log("Email result3 : ", result);
-      debugFormatter.log("Raw Data:3 ", this.rawResult);
+
 
       if (result?.success) {
         this.showToast("success", result.message, "success");
@@ -517,7 +508,6 @@ export default class SoqlBuilder extends LightningElement {
       value: "",
       validOperators: operatorResolver.getOperatorOptions("")
     };
-    console.trace("📌 addFilter: new filters", [...this.filters, newFilter]);
     this.filters = [...this.filters, newFilter];
   }
 
@@ -582,14 +572,11 @@ export default class SoqlBuilder extends LightningElement {
   }
 
   handleToggleInclude(event) {
-    console.log("Toggle Fired:", event?.target?.checked);
     this.includeNonObjects = event.target.checked;
     this.filterObjectList(); // Recalculate dropdown
   }
 
   filterObjectList() {
-    console.log("🔁 Toggle changed:", this.includeNonObjects);
-
     const skipThesePatterns = [
       /feed$/i,
       /history$/i,
@@ -670,6 +657,13 @@ export default class SoqlBuilder extends LightningElement {
     this.updatePreview();
   }
 
+  get visibleResults() {
+    return this.queryResults?.slice(0,50) || [];
+  }
+
+  get showExportNotice(){
+    return this.queryResults?.length > 50;
+  }
   // 👀 Optional Debug Panel Support
 
   get stringifiedTableHeaders() {

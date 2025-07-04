@@ -177,7 +177,9 @@
             </template>
           </div>
           <!--SOQL Builder Controls -->
-          <c-soql-builder-controls oncontrolsupdate={handleControlsUpdate}></c-soql-builder-controls>
+          <c-soql-builder-controls
+            oncontrolsupdate={handleControlsUpdate}
+          ></c-soql-builder-controls>
 
           <!-- Build & Preview -->
           <lightning-button
@@ -206,11 +208,30 @@
           <!-- Results Table -->
           <template if:true={queryResults}>
             <lightning-card title="Query Results" class="slds-m-top_medium">
+              <div class="scrollable-table-container">
               <lightning-datatable
                 key-field="Id"
-                data={queryResults}
+                data={visibleResults}
                 columns={tableColumns}
               ></lightning-datatable>
+            </div>
+              <template if:true={showExportNotice}>
+                <div
+                  class="slds-notify slds-notify_alert slds-theme_info slds-m-top_small"
+                  role="alert"
+                >
+                  <lightning-icon
+                    icon-name="utility:info"
+                    alternative-text="Info"
+                    size="x-small"
+                    class="slds-m-right_x-small"
+                  ></lightning-icon>
+                  <span>
+                    Showing only the first 50 rows. For the full dataset, click 
+                    <strong>Email CSV</strong>.
+                  </span>
+                </div>
+              </template>
               <lightning-button
                 label="Email CSV Results"
                 onclick={handleExport}

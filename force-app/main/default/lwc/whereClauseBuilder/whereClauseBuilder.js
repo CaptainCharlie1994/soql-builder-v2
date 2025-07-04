@@ -25,7 +25,6 @@ export default class whereClauseBuilder {
         .map((f) => {
           const meta = fieldMetadata[f.field];
           const fieldType = typeof meta === "string" ? meta : meta?.type || "String";
-
           const formattedValue = formatFilterValue(f.field, fieldType, f.value);
 
           debugFormatter.log("🧩 Filter", {
