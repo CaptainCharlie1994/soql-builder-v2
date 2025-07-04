@@ -1,5 +1,5 @@
 export function formatFilterValue(fieldApiName, fieldType, value) {
-  if (value === null || value === undefined) return 'null';
+  if (value === null || value === undefined) return null;
 
   const clean = value.toString().trim();
 

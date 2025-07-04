@@ -22,6 +22,7 @@ export default class resultFlattener {
         if (typeof val.Name === "string") return val.Name;
         if (typeof val.Label === "string") return val.Label;
         if (typeof val.Id === "string") return val.Id;
+        if(typeof val === 'boolea') return val.toString();
         if (Array.isArray(val)) return `[${val.length} items]`;
 
         const keys = Object.keys(val);

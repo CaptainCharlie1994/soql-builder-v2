@@ -18,10 +18,13 @@ export default class whereClauseBuilder {
 
     // 🧼 Visual mode: build WHERE clause from filters
     if (!useAdvancedMode && filters.length > 0) {
-      const clauses = filters
-        .filter(
-          (f) => f.field && f.operator && f.value !== undefined && f.value !== ""
-        )
+      const clauses = filters.
+      filter( f => {
+        if(!f.field || !f.operator) return false;
+        if(f.value === null) return true;
+        const vs = `${f.value}`.trim();
+        return vs != '';
+      })
         .map((f) => {
           const meta = fieldMetadata[f.field];
           const fieldType = typeof meta === "string" ? meta : meta?.type || "String";

@@ -59,10 +59,6 @@
   margin-bottom: 1rem;
 }
 
-/* Nudge the “Add Filter” button down */
-.builder-wrapper .add-filter-btn {
-  margin-bottom: 1.5rem;
-}
 
 /* Preview styling */
 .builder-wrapper .soql-preview {
