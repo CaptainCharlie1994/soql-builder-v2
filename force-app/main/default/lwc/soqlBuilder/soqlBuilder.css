@@ -5,6 +5,7 @@
   display: block;
   width: 100%;
   box-sizing: border-box;
+  background-color: #e5e8eb;
 }
 
 /* Centered, fluid wrapper with a max width */
@@ -17,6 +18,8 @@
   flex-direction: column;
   gap: 1.5rem;
   box-sizing: border-box;
+  background-color: #a9c2db;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 /* Make the card fill its container */
@@ -25,9 +28,9 @@
 }
 
 /* Add consistent padding inside the card body */
-.builder-wrapper lightning-card .slds-card__body {
+/* .builder-wrapper lightning-card .slds-card__body {
   padding: 1.5rem;
-}
+} */
 
 /* Checkbox bottom-spacing */
 .builder-wrapper lightning-input[type="checkbox"] {
@@ -94,3 +97,74 @@
   border-top: 1px solid #e0e5ee;
   border-bottom: 1px solid #e0e5ee;
 }
+
+.child-section {
+  background-color: #f4f6f9;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+
+.query-panel {
+  background-color: #f9fafb; /* slightly lighter grey */
+  border-radius: 6px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+
+.section-header {
+  background-color: #e5f3ff; 
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 1rem;
+  border: 1px solid #d8dde6;
+  border-bottom: none;
+  position: relative;
+  margin-bottom: -1.0rem;
+  padding: .5rem;
+}
+
+.section-card {
+  background-color: #f9f9f9; /* Light background for contrast */
+  border: 1px solid #ddd;    /* Subtle border */
+  border-radius: 8px;        /* Rounded corners */
+  padding: 1rem;             /* Inner spacing */
+  margin-bottom: 1rem;       /* Space between cards */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Soft shadow for depth */
+}
+
+.action-button {
+  background: linear-gradient(135deg, #4f46e5, #3b82f6); /* Indigo to blue gradient */
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.action-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.action-button:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.action-button:focus {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+

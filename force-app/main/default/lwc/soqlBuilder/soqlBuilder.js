@@ -200,6 +200,8 @@ export default class SoqlBuilder extends LightningElement {
 
         this.parentRelationshipOptions = relOpts;
         this.filteredParentRelOptions = [...relOpts];
+        this.parentFieldOptions = relOpts;
+        this.filteredParentFieldOptions = [...relOpts];
         this.selectedParent = "";
         this.selectedParentFields = [];
 
@@ -504,12 +506,6 @@ export default class SoqlBuilder extends LightningElement {
 
     if (listType === "main") {
       this.filteredFieldOptions = filterOptions(this.fieldOptions, term);
-    } else if (listType === "parentRel") {
-      // ← changed
-      this.filteredParentRelOptions = filterOptions(
-        this.parentRelationshipOptions,
-        term
-      );
     } else if (listType === "parentField") {
       this.filteredParentFieldOptions = filterOptions(
         this.parentFieldOptions,
@@ -748,7 +744,8 @@ export default class SoqlBuilder extends LightningElement {
       const original = this.childFieldOptions[rel] || [];
       const filtered = this.filteredChildFieldOptions[rel];
       return {
-        rel,
+        rel: rel,
+        label: `${rel} (expandable...)`,
         options: Array.isArray(filtered) ? filtered : original,
         selected: this.selectedChildFields[rel] || []
       };
@@ -758,4 +755,15 @@ export default class SoqlBuilder extends LightningElement {
   get hasParentOptions() {
     return this.parentRelationshipOptions?.length > 0;
   }
+
+  get openChildSections(){
+    return this.selectedRelationships || [];
+  }
+
+  get shouldShowParentSection() {
+  return this.selectedObject && (this.hasParentOptions || this.selectedParent);
+}
+get shouldShowChildSection(){
+  return this.selectedObject && thischildFieldConfigs;
+}
 }
