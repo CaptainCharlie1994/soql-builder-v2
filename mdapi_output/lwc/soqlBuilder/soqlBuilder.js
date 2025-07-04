@@ -59,9 +59,6 @@ export default class SoqlBuilder extends LightningElement {
   useAdvancedMode = false;
   rawWhereClause = "";
   selectedParent = "";
-  orderByField = "";
-  orderDirection = "ASC";
-  limit = 500;
 
   @wire(getQueryableObjects)
   wiredObjects({ error, data }) {
@@ -387,15 +384,11 @@ export default class SoqlBuilder extends LightningElement {
       selectedChildFields: this.selectedChildFields,
       rawWhereClause: this.rawWhereClause,
       useAdvancedMode: this.useAdvancedMode,
-      fieldMetadata: this.fieldMetadata,
-      orderByField: this.orderByField,
-      orderDirection: this.orderDirection,
-      limit: this.limit
+      fieldMetadata: this.fieldMetadata // ⬅️ Critical for correct formatting
     });
 
     debugFormatter.log("🧪 Full SOQL query", fullQuery);
 
-    console.log('Running SOQL:', this.soqlPreview);
     runQuery({ soql: fullQuery })
       .then((data) => {
         this.rawResult = data;
@@ -645,11 +638,7 @@ export default class SoqlBuilder extends LightningElement {
       filters: this.filters,
       selectedChildFields: this.selectedChildFields,
       rawWhereClause: this.rawWhereClause,
-      useAdvancedMode: this.useAdvancedMode,
-      fieldMetadata: this.fieldMetadata,
-      orderByField: this.orderByField,
-      orderDirection: this.orderDirection,
-      limit: this.limit
+      useAdvancedMode: this.useAdvancedMode
     });
   }
 
@@ -659,15 +648,6 @@ export default class SoqlBuilder extends LightningElement {
       options: this.childFieldOptions[rel],
       selected: this.selectedChildFields[rel] || []
     }));
-  }
-
-  handleControlsUpdate(event) {
-    const { orderByField, orderDirection, limit } = event.detail;
-    this.orderByField = orderByField;
-    this.orderDirection = orderDirection;
-    this.limit = limit;
-
-    this.updatePreview();
   }
 
   // 👀 Optional Debug Panel Support

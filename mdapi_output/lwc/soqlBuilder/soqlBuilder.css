@@ -1,0 +1,93 @@
+/* soqlBuilder.css */
+
+/* Host element always full-width container */
+:host {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Centered, fluid wrapper with a max width */
+.builder-wrapper {
+  width: 100%;
+  max-width: 1200px;       /* caps growth on large monitors */
+  margin: 0 auto;          /* centers when wider than max-width */
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-sizing: border-box;
+}
+
+/* Make the card fill its container */
+.builder-wrapper lightning-card {
+  width: 100%;
+}
+
+/* Add consistent padding inside the card body */
+.builder-wrapper lightning-card .slds-card__body {
+  padding: 1.5rem;
+}
+
+/* Checkbox bottom-spacing */
+.builder-wrapper lightning-input[type="checkbox"] {
+  margin-bottom: 1rem;
+}
+
+/* Full-width form elements with bottom margin */
+.builder-wrapper lightning-combobox,
+.builder-wrapper lightning-dual-listbox,
+.builder-wrapper lightning-textarea {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+/* WHERE header row */
+.builder-wrapper .slds-grid.slds-grid_align-spread {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+/* Filter rows: grid layout with baseline alignment */
+.builder-wrapper .filter-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 2fr auto;
+  gap: 1rem;
+  align-items: baseline;
+  margin-bottom: 1rem;
+}
+
+/* Nudge the “Add Filter” button down */
+.builder-wrapper .add-filter-btn {
+  margin-bottom: 1.5rem;
+}
+
+/* Preview styling */
+.builder-wrapper .soql-preview {
+  padding: 1rem;
+  border-radius: 4px;
+  border: 1px solid #d8dde6;
+  background-color: #f9fafb;
+  font-family: Consolas, Menlo, Monaco, monospace;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+/* Button spacing tweaks */
+.builder-wrapper lightning-button,
+.builder-wrapper lightning-button-icon {
+  margin-right: 0.5rem;
+}
+
+.builder-wrapper lightning-button[variant="brand"] {
+  align-self: flex-start;
+}
+
+/* Responsive fallback: on very narrow screens, keep full-width with padding */
+@media screen and (max-width: 600px) {
+  .builder-wrapper {
+    padding: 0.75rem;
+  }
+}

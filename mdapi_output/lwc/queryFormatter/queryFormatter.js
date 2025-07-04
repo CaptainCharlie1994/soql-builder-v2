@@ -2,11 +2,11 @@ import whereClauseBuilder from "c/whereClauseBuilder";
 
 export default class queryFormatter {
   static buildSubqueries(childFieldMap) {
-    return Object.entries(childFieldMap).map(([relationshipName, fields]) => {
-      const fieldList = fields.join(", ");
-      return `(SELECT ${fieldList} FROM ${relationshipName})`;
-    });
-  }
+  return Object.entries(childFieldMap).map(([relationshipName, fields]) => {
+    const fieldList = fields.join(", ");
+    return `(SELECT ${fieldList} FROM ${relationshipName})`;
+  });
+}
 
   static generatePreview({
     selectedObject,
@@ -16,12 +16,10 @@ export default class queryFormatter {
     selectedChildFields = {},
     rawWhereClause = "",
     useAdvancedMode = false,
-    fieldMetadata = {},
-    orderByField = "",
-    orderDirection = "ASC",
-    limit = 500
+    fieldMetadata = {}
   }) {
     if (!selectedObject || selectedFields.length === 0) {
+
       return null;
     }
 
@@ -53,20 +51,7 @@ export default class queryFormatter {
 
     //── Assemble full query ───────────────────────────────────────────────
     const selectClause = [fieldList, ...subqueries].filter(Boolean).join(", ");
-    let query = `SELECT ${selectClause} FROM ${selectedObject}`;
-
-    // Append WHERE clause if present
-    if (whereClause && whereClause.trim()) {
-      query += ` ${whereClause}`;
-    }
-
-    // Append ORDER BY clause if a field is selected
-    if (orderByField) {
-      query += ` ORDER BY ${orderByField} ${orderDirection}`;
-    }
-
-    // Always append LIMIT (defaulted to 500)
-    query += ` LIMIT ${limit}`;
+    const query = `SELECT ${selectClause} FROM ${selectedObject}${whereClause}`;
 
     return query;
   }
