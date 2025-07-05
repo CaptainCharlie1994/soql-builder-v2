@@ -1,7 +1,7 @@
 <template>
   <div class="slds-grid slds-wrap slds-gutters builder-layout">
     <!-- LEFT: Builder Controls -->
-    <div class="slds-col slds-size_1-of-1 slds-large-size_2-of-3">
+    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
       <lightning-card
         title="SOQL Builder"
         icon-name="custom:custom63"
@@ -224,7 +224,7 @@
     </div>
     <!-- RIGHT: Query Preview & Results Panel -->
 
-    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-3">
+    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
       <div
         class="slds-box slds-theme_default slds-p-around_medium query-panel-wrapper"
       >
@@ -255,8 +255,14 @@
             </template>
 
             <!-- Results Table -->
+            <template if:true={exportTablePlaceHolder}>
+              <p class="slds-text-color_weak slds-m-top_medium">
+                No records found. Try adjusting your filters or object
+                selection.
+              </p>
+            </template>
             <template if:true={queryResults}>
-              <lightning-card title="Query Results" class="slds-m-top_medium">
+              <lightning-card title="Query Results" class="slds-m-top_large">
                 <div class="scrollable-table-container">
                   <lightning-datatable
                     key-field="Id"
@@ -289,7 +295,6 @@
                 <lightning-button
                   label="Email CSV Results"
                   onclick={handleExport}
-                  variant="brand"
                   class="action-button"
                 ></lightning-button>
               </lightning-card>

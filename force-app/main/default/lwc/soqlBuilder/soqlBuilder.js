@@ -799,4 +799,8 @@ export default class SoqlBuilder extends LightningElement {
   get shouldShowChildSection() {
     return this.selectedObject && thischildFieldConfigs;
   }
+
+  get exportTablePlaceHolder() {
+    return this.queryResults.length === 0;
+  }
 }

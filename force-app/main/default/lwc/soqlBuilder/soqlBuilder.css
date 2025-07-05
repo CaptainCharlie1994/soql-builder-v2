@@ -168,3 +168,8 @@
   outline-offset: 2px;
 }
 
+.query-panel lightning-card {
+  border: 1px solid #d8dde6;
+  border-radius: 6px;
+  background-color: #ffffff;
+}
