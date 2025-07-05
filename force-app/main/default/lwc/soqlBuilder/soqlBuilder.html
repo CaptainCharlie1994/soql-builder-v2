@@ -1,7 +1,7 @@
 <template>
   <div class="panel-container slds-grid">
     <!-- LEFT PANEL -->
-    <div class={leftPanelClass}>
+    <div class={ui.leftPanelClass}>
       <div class="builder-layout">
         <lightning-card
           title="SOQL Builder"
@@ -49,9 +49,9 @@
               </div>
             </template>
 
-            <template if:true={shouldShowParentSection}>
+            <template if:true={ui.shouldShowParentSection}>
               <div class="section-card">
-                <template if:true={hasParentOptions}>
+                <template if:true={ui.hasParentOptions}>
                   <h2 class="section-header">Parent Selector</h2>
                   <lightning-combobox
                     value={selectedParent}
@@ -85,13 +85,13 @@
                   onchange={handleRelationshipSelection}
                 ></lightning-dual-listbox>
 
-                <template if:true={childFieldConfigs}>
+                <template if:true={ui.childFieldConfigs}>
                   <lightning-accordion
                     class="child-section"
                     allow-multiple-sections-open
-                    active-section-name={openChildSections}
+                    active-section-name={ui.openChildSections}
                   >
-                    <template for:each={childFieldConfigs} for:item="cfg">
+                    <template for:each={ui.childFieldConfigs} for:item="cfg">
                       <lightning-accordion-section
                         key={cfg.rel}
                         name={cfg.rel}
@@ -120,7 +120,7 @@
               </div>
             </template>
 
-            <template if:true={showFieldSelector}>
+            <template if:true={ui.showFieldSelector}>
               <div class="section-card">
                 <div class="slds-m-top_medium">
                   <h2 class="section-header">WHERE Clause</h2>
@@ -137,7 +137,7 @@
 
                   <template if:false={useAdvancedMode}>
                     <template
-                      for:each={filtersWithOperatorOptions}
+                      for:each={ui.filtersWithOperatorOptions}
                       for:item="filter"
                     >
                       <div key={filter.id} class="filter-row">
@@ -215,21 +215,21 @@
     </div>
 
     <!-- RIGHT PANEL -->
-    <div class={rightPanelWrapperClass}>
-      <div class={toggleButtonClass}>
+    <div class={ui.rightPanelWrapperClass}>
+      <div class={ui.toggleButtonClass}>
         <div class="toggle-button">
           <lightning-button-icon
-            icon-name={panelToggleIcon}
+            icon-name={ui.panelToggleIcon}
             alternative-text="Toggle Panel"
             onclick={togglePanel}
             variant="border-filled"
             class="toggle-button"
             title="Collapse/Expand Panel"
           ></lightning-button-icon>
-          <span class="toggle-label">{panelToggleLabel}</span>
+          <span class="toggle-label">{ui.panelToggleLabel}</span>
         </div>
       </div>
-      <div class={rightPanelClass}>
+      <div class={ui.rightPanelClass}>
         <template if:true={isPanelOpen}>
           <div class="query-panel-wrapper">
             <div class="sticky">
@@ -248,11 +248,11 @@
                   <div class="scrollable-table-container">
                     <lightning-datatable
                       key-field="Id"
-                      data={visibleResults}
+                      data={ui.visibleResults}
                       columns={tableColumns}
                     ></lightning-datatable>
                   </div>
-                  <template if:true={showExportNotice}>
+                  <template if:true={ui.showExportNotice}>
                     <div
                       class="slds-notify slds-notify_alert slds-theme_info slds-m-top_small"
                       role="alert"

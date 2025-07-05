@@ -15,6 +15,7 @@ import queryFormatter from "c/queryFormatter";
 import resultFlattener from "c/resultFlattener";
 import { filterOptions } from "c/listFilterUtils";
 import { debounce } from "c/debounce";
+import { computeUIValues } from './soqlBuilderGetters';
 
 //Import Salesforce Utility
 import { getRecord } from "lightning/uiRecordApi";
@@ -102,6 +103,9 @@ export default class SoqlBuilder extends LightningElement {
 
   connectedCallback() {
     this.debouncedUpdatePreview = debounce(this.updatePreview.bind(this), 300);
+    console.log("✅ soqlBuilder component mounted");
+
+
   }
 
   //Wired objects to invoke Apex Classes.
@@ -712,101 +716,17 @@ export default class SoqlBuilder extends LightningElement {
     this.isPanelOpen = !this.isPanelOpen;
   }
 
-  //-------- GETTERS AND SETTERS ---------------------
-
-  get panelToggleIcon() {
-    return this.isPanelOpen ? "utility:chevrondown" : "utility:chevronup";
+  //-------- GETTERS | this was consolidated in a modulised fashion, getters are now set in soqlBuilderGetters.js
+ get ui() {
+  try {
+    const values = computeUIValues(this);
+    console.log("🧪 UI Values:", values);
+    return values;
+  } catch (error) {
+    console.error("❌ Error in ui getter:", error);
+    return {};
   }
+}
 
-  get panelToggleLabel() {
-    return this.isPanelOpen ? "Collapse Results" : "Expand Results";
-  }
-
-  get toggleButtonClass() {
-    return `toggle-button-container ${this.isPanelOpen ? "panel-open" : "panel-closed"}`;
-  }
-
-  get rightPanelWrapperClass() {
-    console.log(JSON.stringify(this.isPanelOpen));
-    return `right-panel-container-wrapper ${this.isPanelOpen ? "visible" : "hidden"}`;
-  }
-
-  get showWhereModeToggle() {}
-
-  get leftPanelClass() {
-    return this.isPanelOpen ? "left-panel narrow" : "left-panel full";
-  }
-
-  get rightPanelClass() {
-    return this.isPanelOpen ? "right-panel slide-in" : "right-panel slide-out";
-  }
-
-  get showFieldSelector() {
-    return this.selectedObject && this.fieldOptions.length > 0;
-  }
-
-  get filtersWithOperatorOptions() {
-    return this.filters.map((f, index) => ({
-      ...f,
-      index,
-      safeOperators: Array.isArray(f.validOperators)
-        ? f.validOperators
-        : [
-            { label: "=", value: "=" },
-            { label: "!=", value: "!=" }
-          ],
-      isDisabled: !f.field
-    }));
-  }
-
-  get visibleResults() {
-    return this.queryResults?.slice(0, 50) || [];
-  }
-
-  get showExportNotice() {
-    return this.queryResults?.length > 50;
-  }
-  // 👀 Optional Debug Panel Support
-
-  get stringifiedTableHeaders() {
-    return JSON.stringify(
-      this.tableColumns?.map((c) => c.fieldName),
-      null,
-      2
-    );
-  }
-
-  get childFieldConfigs() {
-    return Object.keys(this.childFieldOptions).map((rel) => {
-      const original = this.childFieldOptions[rel] || [];
-      const filtered = this.filteredChildFieldOptions[rel];
-      return {
-        rel: rel,
-        label: `${rel} (expandable...)`,
-        options: Array.isArray(filtered) ? filtered : original,
-        selected: this.selectedChildFields[rel] || []
-      };
-    });
-  }
-
-  get hasParentOptions() {
-    return this.parentRelationshipOptions?.length > 0;
-  }
-
-  get openChildSections() {
-    return this.selectedRelationships || [];
-  }
-
-  get shouldShowParentSection() {
-    return (
-      this.selectedObject && (this.hasParentOptions || this.selectedParent)
-    );
-  }
-  get shouldShowChildSection() {
-    return this.selectedObject && thischildFieldConfigs;
-  }
-
-  get exportTablePlaceHolder() {
-    return this.queryResults.length === 0;
-  }
+  
 }
