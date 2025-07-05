@@ -3,6 +3,7 @@ import getQueryableObjects from "@salesforce/apex/SoqlBuilderHelper.getQueryable
 import getFieldsForObject from "@salesforce/apex/SoqlBuilderHelper.getFieldsForObject";
 import runQuery from "@salesforce/apex/SoqlBuilderHelper.runQuery";
 import getChildRelationships from "@salesforce/apex/SoqlBuilderHelper.getChildRelationships";
+import getSoqlPreview from "@salesforce/apex/SoqlBuilderHelper.getSoqlPreview";
 import getChildObjectMappings from "@salesforce/apex/relationshipResolver.getChildObjectMappings";
 import emailCsv from "@salesforce/apex/exportController.emailCsv";
 
@@ -13,6 +14,7 @@ import parentFieldManager from "c/parentFieldManager";
 import queryFormatter from "c/queryFormatter";
 import resultFlattener from "c/resultFlattener";
 import { filterOptions } from "c/listFilterUtils";
+import { debounce } from "c/debounce";
 
 //Import Salesforce Utility
 import { getRecord } from "lightning/uiRecordApi";
@@ -91,21 +93,15 @@ export default class SoqlBuilder extends LightningElement {
     queryResults: [],
     tableColumns: [],
     relationshipToSObjectMap: {},
-    fieldMetadata: {}
+    fieldMetadata: {},
+    isPanelOpen: true
   };
 
   //Instantiate placeholders.
   userEmail = "";
 
   connectedCallback() {
-    console.log(
-      "parentRelOptions →",
-      JSON.stringify(this.parentRelationshipOptions),
-      "filteredParentRelOptions →",
-      JSON.stringify(this.filteredParentRelOptions),
-      "selectedRelationships →",
-      JSON.stringify(this.selectedRelationships)
-    );
+    this.debouncedUpdatePreview = debounce(this.updatePreview.bind(this), 300);
   }
 
   //Wired objects to invoke Apex Classes.
@@ -207,7 +203,7 @@ export default class SoqlBuilder extends LightningElement {
 
         // d) Ready & follow‐ons
         this.dualListBoxReady = true;
-        this.updatePreview();
+        this.debouncedUpdatePreview();
         this.fetchChildRelationships();
         this.fetchRelationshipMappings();
       })
@@ -217,31 +213,32 @@ export default class SoqlBuilder extends LightningElement {
       });
   }
 
-
-
   fetchParentFields(parentObjectName, relationshipName) {
-  if (!parentObjectName) return;
+    if (!parentObjectName) return;
 
-  getFieldsForObject({ objectApiName: parentObjectName }).then((fields) => {
-    if (!Array.isArray(fields) || fields.length === 0) {
-      console.warn("⚠️ No fields returned for parent object:", parentObjectName);
-      this.parentFieldOptions = [];
-      return;
-    }
+    getFieldsForObject({ objectApiName: parentObjectName }).then((fields) => {
+      if (!Array.isArray(fields) || fields.length === 0) {
+        console.warn(
+          "⚠️ No fields returned for parent object:",
+          parentObjectName
+        );
+        this.parentFieldOptions = [];
+        return;
+      }
 
-    const optionsList = fields.map((f) => {
-      const fullName = `${relationshipName}.${f.name}`;
-      console.log("✅ Parent field option:", fullName);
-      return {
-        label: f.label || f.name,
-        value: fullName
-      };
+      const optionsList = fields.map((f) => {
+        const fullName = `${relationshipName}.${f.name}`;
+        console.log("✅ Parent field option:", fullName);
+        return {
+          label: f.label || f.name,
+          value: fullName
+        };
+      });
+
+      this.parentFieldOptions = optionsList;
+      this.filteredParentFieldOptions = [...optionsList];
     });
-
-    this.parentFieldOptions = optionsList;
-    this.filteredParentFieldOptions = [...optionsList];
-  });
-}
+  }
 
   handleRelationshipSelection(event) {
     const newSelection = event.detail.value;
@@ -278,7 +275,7 @@ export default class SoqlBuilder extends LightningElement {
 
     // ✅ Wait for all fetches to complete before updating preview
     Promise.all(fetchPromises).then(() => {
-      this.updatePreview();
+      this.debouncedUpdatePreview();
     });
   }
 
@@ -293,27 +290,27 @@ export default class SoqlBuilder extends LightningElement {
     console.log("Child fields for", rel, ":", this.selectedChildFields[rel]);
     //Add a promise resolve to stop this being called before the render tick.
     Promise.resolve().then(() => {
-      this.updatePreview();
+      this.debouncedUpdatePreview();
     });
   }
 
   handleFieldSelection(event) {
-  const incoming = event.detail?.value || [];
+    const incoming = event.detail?.value || [];
 
-  const validSet = new Set(this.fieldOptions.map((o) => o.value));
-  const expandedFields = incoming.flatMap((field) => {
-    if (!validSet.has(field)) return [];
+    const validSet = new Set(this.fieldOptions.map((o) => o.value));
+    const expandedFields = incoming.flatMap((field) => {
+      if (!validSet.has(field)) return [];
 
-    const fieldType = this.fieldMetadata[field];
-    if (fieldType === "Reference") {
-      return [`${field}.Name`];
-    }
-    return [field];
-  });
+      const fieldType = this.fieldMetadata[field];
+      if (fieldType === "Reference") {
+        return [`${field}.Name`];
+      }
+      return [field];
+    });
 
-  this.selectedFields = expandedFields;
-  this.updatePreview();
-}
+    this.selectedFields = expandedFields;
+    this.debouncedUpdatePreview();
+  }
 
   handleFilterChange(event) {
     const index = parseInt(event.currentTarget.dataset.index, 10);
@@ -333,13 +330,13 @@ export default class SoqlBuilder extends LightningElement {
 
     updated[index] = filter;
     this.filters = updated;
-    this.updatePreview();
+    this.debouncedUpdatePreview();
   }
 
   handleRemoveFilter(event) {
     const index = parseInt(event.currentTarget.dataset.index, 10);
     this.filters = this.filters.filter((_, i) => i !== index);
-    this.updatePreview();
+    this.debouncedUpdatePreview();
   }
 
   handleWhereInputChange(event) {
@@ -354,73 +351,38 @@ export default class SoqlBuilder extends LightningElement {
       return;
     }
 
-    // 🧼 Sanitize filters
-    this.filters = this.filters.map((f) => ({
-      id:
-        f.id ||
-        `filter-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-      field: f.field || "",
-      operator: f.operator || "=",
-      value: f.value || "",
-      validOperators:
-        f.validOperators || operatorResolver.getOperatorOptions(f.field || "")
-    }));
+    this.getSoqlQueryFromApex()
+      .then((fullQuery) => {
+        this.soqlPreview = fullQuery;
 
-    const fullQuery = queryFormatter.generatePreview({
-      selectedObject: this.selectedObject,
-      selectedFields: this.selectedFields,
-      selectedParentFields: this.selectedParentFields,
-      filters: this.filters,
-      selectedChildFields: this.selectedChildFields,
-      rawWhereClause: this.rawWhereClause,
-      useAdvancedMode: this.useAdvancedMode,
-      fieldMetadata: this.fieldMetadata,
-      orderByField: this.orderByField,
-      orderDirection: this.orderDirection,
-      limit: this.limit
-    });
-
-    debugFormatter.log("🧪 Full SOQL query", fullQuery);
-
-    console.log("Running SOQL:", this.soqlPreview);
-    runQuery({ soql: fullQuery })
+        return runQuery({ soql: fullQuery });
+      })
       .then((data) => {
         this.rawResult = data;
-        debugFormatter.log("resultFlattener type", typeof resultFlattener);
         const { rows, headers } = resultFlattener.flattenResults(
           data,
           this.selectedParentFields,
           this.selectedChildFields
         );
 
-        console.table(rows);
         this.queryResults = rows;
         this.tableColumns = headers.map((header) => ({
           label: header,
           fieldName: header
         }));
 
-        // ✅ Show toast if no results
         if (!rows || rows.length === 0) {
-          this.dispatchEvent(
-            new ShowToastEvent({
-              title: "No Results",
-              message: "This query returned 0 records.",
-              variant: "info"
-            })
+          this.showToast(
+            "No Results",
+            "This query returned 0 records.",
+            "info"
           );
-
           this.queryResults = [];
           this.tableColumns = [];
         }
       })
       .catch((error) => {
-        debugFormatter.log("❌ runQuery failed", error);
-
-        console.log("Error body message:", error?.body?.message);
-        console.log("Error stack:", error?.stack);
-        console.log("Error name:", error?.name);
-
+        console.error("❌ runQuery failed", error);
         this.queryResults = [];
         this.tableColumns = [];
 
@@ -428,13 +390,7 @@ export default class SoqlBuilder extends LightningElement {
           error?.body?.message ||
           "An error occurred while executing the query.";
 
-        this.dispatchEvent(
-          new ShowToastEvent({
-            title: "SOQL Error",
-            message,
-            variant: "error"
-          })
-        );
+        this.showToast("SOQL Error", message, "error");
       });
   }
 
@@ -508,7 +464,7 @@ export default class SoqlBuilder extends LightningElement {
   handleParentFieldChange(event) {
     console.log("🔎 Raw parent field selection:", event.detail.value);
     this.selectedParentFields = event.detail.value;
-    this.updatePreview();
+    this.debouncedUpdatePreview();
   }
 
   handleToggleInclude(event) {
@@ -522,7 +478,7 @@ export default class SoqlBuilder extends LightningElement {
     this.orderDirection = orderDirection;
     this.limit = limit;
 
-    this.updatePreview();
+    this.debouncedUpdatePreview();
   }
 
   handleOptionsSearch(event) {
@@ -552,19 +508,36 @@ export default class SoqlBuilder extends LightningElement {
       this.soqlPreview = null;
       return;
     }
-    this.soqlPreview = queryFormatter.generatePreview({
-      selectedObject: this.selectedObject,
+
+    this.getSoqlQueryFromApex()
+      .then((soql) => {
+        this.soqlPreview = soql;
+      })
+      .catch((error) => {
+        console.error("❌ Failed to build SOQL preview:", error);
+        this.soqlPreview = "Error building query";
+      });
+  }
+
+  getSoqlQueryFromApex() {
+    const payload = {
+      objectApiName: this.selectedObject,
       selectedFields: this.selectedFields,
       selectedParentFields: this.selectedParentFields,
-      filters: this.filters,
+      filters: this.filters.map((f) => ({
+        field: f.field,
+        operator: f.operator,
+        value: f.value
+      })),
       selectedChildFields: this.selectedChildFields,
-      rawWhereClause: this.rawWhereClause,
       useAdvancedMode: this.useAdvancedMode,
-      fieldMetadata: this.fieldMetadata,
+      rawWhereClause: this.rawWhereClause,
       orderByField: this.orderByField,
       orderDirection: this.orderDirection,
-      limit: this.limit
-    });
+      queryLimit: this.limit
+    };
+
+    return getSoqlPreview(payload); // returns a Promise
   }
 
   addFilter() {
@@ -658,43 +631,49 @@ export default class SoqlBuilder extends LightningElement {
     };
 
     Promise.resolve(() => {
-      this.updatePreview();
+      this.debouncedUpdatePreview();
     });
   }
 
   //--------FETCHES--------------------
   fetchParentFields(parentObjectName, relationshipName) {
-  if (!parentObjectName) return;
+    if (!parentObjectName) return;
 
-  getFieldsForObject({ objectApiName: parentObjectName }).then((fields) => {
-    if (!Array.isArray(fields) || fields.length === 0) {
-      console.warn("⚠️ No fields returned for parent object:", parentObjectName);
-      this.parentFieldOptions = [];
-      return;
-    }
+    getFieldsForObject({ objectApiName: parentObjectName }).then((fields) => {
+      if (!Array.isArray(fields) || fields.length === 0) {
+        console.warn(
+          "⚠️ No fields returned for parent object:",
+          parentObjectName
+        );
+        this.parentFieldOptions = [];
+        return;
+      }
 
-    this.parentFieldOptions = fields
-      .map((f) => {
-        const fullName = `${relationshipName}.${f.name}`;
-        console.log("✅ Parent field option:", fullName);
-        return {
-          label: f.label || f.name,
-          value: fullName
-        };
-      })
-      .sort((a, b) =>
-        a.label.localeCompare(b.label, undefined, {
-          numeric: true,
-          sensitivity: "base"
+      this.parentFieldOptions = fields
+        .map((f) => {
+          const fullName = `${relationshipName}.${f.name}`;
+          console.log("✅ Parent field option:", fullName);
+          return {
+            label: f.label || f.name,
+            value: fullName
+          };
         })
+        .sort((a, b) =>
+          a.label.localeCompare(b.label, undefined, {
+            numeric: true,
+            sensitivity: "base"
+          })
+        );
+
+      this.filteredParentFieldOptions = [...this.parentFieldOptions];
+
+      // 🔍 Add this log here
+      console.log(
+        "🧾 Dual listbox options:",
+        JSON.stringify(this.filteredParentFieldOptions, null, 2)
       );
-
-    this.filteredParentFieldOptions = [...this.parentFieldOptions];
-
-    // 🔍 Add this log here
-    console.log("🧾 Dual listbox options:", JSON.stringify(this.filteredParentFieldOptions, null, 2));
-  });
-}
+    });
+  }
 
   fetchChildRelationships() {
     getChildRelationships({ objectApiName: this.selectedObject })
@@ -728,15 +707,42 @@ export default class SoqlBuilder extends LightningElement {
   toggleWhereMode() {
     this.useAdvancedMode = !this.useAdvancedMode;
   }
-  //-------- GETTERS AND SETTERS ---------------------
-  get showFieldSelector() {
-    return this.selectedObject && this.fieldOptions.length > 0;
+
+  togglePanel() {
+    this.isPanelOpen = !this.isPanelOpen;
   }
 
-  get whereToggleIcon() {
-    return this.useAdvancedMode
-      ? "utility:toggle_panel_left"
-      : "utility:toggle_panel_right";
+  //-------- GETTERS AND SETTERS ---------------------
+
+  get panelToggleIcon() {
+    return this.isPanelOpen ? "utility:chevrondown" : "utility:chevronup";
+  }
+
+  get panelToggleLabel() {
+    return this.isPanelOpen ? "Collapse Results" : "Expand Results";
+  }
+
+  get toggleButtonClass() {
+    return `toggle-button-container ${this.isPanelOpen ? "panel-open" : "panel-closed"}`;
+  }
+
+  get rightPanelWrapperClass() {
+    console.log(JSON.stringify(this.isPanelOpen));
+    return `right-panel-container-wrapper ${this.isPanelOpen ? "visible" : "hidden"}`;
+  }
+
+  get showWhereModeToggle() {}
+
+  get leftPanelClass() {
+    return this.isPanelOpen ? "left-panel narrow" : "left-panel full";
+  }
+
+  get rightPanelClass() {
+    return this.isPanelOpen ? "right-panel slide-in" : "right-panel slide-out";
+  }
+
+  get showFieldSelector() {
+    return this.selectedObject && this.fieldOptions.length > 0;
   }
 
   get filtersWithOperatorOptions() {
