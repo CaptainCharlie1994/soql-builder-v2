@@ -78,13 +78,13 @@
   color: #1b1b1b;
   font-family: 'Fira Code', Consolas, Menlo, Monaco, monospace;
   font-size: 0.95rem;
-  padding-left: 2rem;
-
+  padding-left: 1rem;
 }
 
 .soql-preview-title{
   color:#1b1b1b;
   font-size: 2rem;
+ 
 }
 
 /* Button spacing tweaks */
