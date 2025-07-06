@@ -37,7 +37,7 @@
 .builder-wrapper lightning-dual-listbox,
 .builder-wrapper lightning-textarea {
   width: 100%;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 /* WHERE header row */

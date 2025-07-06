@@ -47,17 +47,17 @@
               </div>
             </template>
             <!--+++++++++ PARENT SELECTOR +++++++++-->
-            <template if:true={ui.shouldShowParentSection}>
+            <template if:true={selectedObject}>
               <div class="section-card">
-                <template if:true={ui.hasParentOptions}>
                   <h2 class="section-header">Parent Selector</h2>
-                  <lightning-combobox
+                  <lightning-dual-listbox
+                    name="relatedLists"
+                    source-label="Available"
+                    selected-label="Included"
                     value={selectedParent}
                     options={filteredParentRelOptions}
                     onchange={handleParentSelect}
-                    placeholder="Select a parent relationship"
-                  ></lightning-combobox>
-                </template>
+                  ></lightning-dual-listbox>
                 <template if:true={selectedParent}>
                   <!--+++++++++ PARENT FIELD SELECTOR +++++++++-->
                   <lightning-dual-listbox
