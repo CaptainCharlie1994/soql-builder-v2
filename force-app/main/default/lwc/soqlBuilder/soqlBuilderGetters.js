@@ -43,6 +43,7 @@ export function computeUIValues(ctx) {
       };
     }),
     openChildSections: ctx.selectedChildRels || [],
+    openParentSections: ctx.selectedParentRels || [],
     previewText: ctx.soqlPreview ? ctx.soqlPreview : "SOQL query generated will appear here...",
   };
 }

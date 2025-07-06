@@ -42,31 +42,32 @@ export default class SoqlBuilder extends LightningElement {
   }
 
   @track state = {
-    // 1) object picker
+    // 1) Object Picker
     objectOptions: [],
     selectedObject: "",
 
-    // 2) field selector
+    // 2) Main Fields
     mainFieldOptions: [],
     filteredFieldOptions: [],
     selectedMainFields: [],
+    mainFieldMetadata: {},
 
-    // 3) parent relationship & fields
+    // 3) Parent Relationships
     parentRelOptions: [],
     filteredParentRelOptions: [],
     selectedParentRels: [],
-    parentRelFieldOptions: [],
-    filteredParentRelFieldOptions: [],
-    selectedParentRelFields: [],
+    parentRelFieldOptions: {},
+    filteredParentRelFieldOptions: {},
+    selectedParentRelFields: {},
 
-    // 4) child relationships & fields
+    // 4) Child Relationships
     childRelOptions: [],
     selectedChildRels: [],
-    childRelFieldOptions: {}, // { rel: [opts] }
-    filteredChildFieldOptions: {}, // { rel: [opts] }
-    selectedChildRelFields: {}, // { rel: [values] }
+    childRelFieldOptions: {},
+    filteredChildFieldOptions: {},
+    selectedChildRelFields: {},
 
-    // 5) WHERE‐clause filters
+    // 5) WHERE Clause Filters
     filters: [
       {
         id: "filter-0",
@@ -79,22 +80,21 @@ export default class SoqlBuilder extends LightningElement {
     useAdvancedMode: false,
     rawWhereClause: "",
 
-    // 6) ORDER/LIMIT controls
+    // 6) ORDER BY / LIMIT
     limit: 500,
     orderByField: "",
     orderDirection: "ASC",
 
-    // 7) misc toggles
+    // 7) Misc Toggles
     includeNonObjects: false,
     dualListBoxReady: false,
+    isPanelOpen: true,
 
-    // 8) query results & preview
+    // 8) Query Results & Preview
     soqlPreview: null,
     queryResults: [],
     tableColumns: [],
-    relationshipToSObjectMap: {},
-    mainFieldMetadata: {},
-    isPanelOpen: true
+    relationshipToSObjectMap: {}
   };
 
   //Instantiate placeholders.
@@ -265,16 +265,11 @@ export default class SoqlBuilder extends LightningElement {
 
   // --------------- PARENT SELECTION --------------------
   handleParentRelSelection(event) {
+    const previousSelectedParentRels = this.selectedParentRels;
     const newSelection = event.detail.value;
-    console.log("🧲 handleParentRelSelection triggered");
-    console.log("➡️ New selection:", event.detail.value);
-    console.log(
-      "🧾 Current options:",
-      JSON.stringify(this.filteredParentRelOptions)
-    );
 
     // Remove deselected Parent Objects
-    const removed = this.selectedParentRels.filter(
+    const removed = previousSelectedParentRels.filter(
       (rel) => !newSelection.includes(rel)
     );
     removed.forEach((rel) => {
@@ -283,31 +278,25 @@ export default class SoqlBuilder extends LightningElement {
       delete this.selectedParentRelFields[rel];
     });
 
+    // Update selection
     this.selectedParentRels = newSelection;
 
+    // Fetch fields for newly added relationships
     const fetchPromises = newSelection.map((rel) => {
-      if (!this.parentRelOptions[rel]) {
-        const parentObj = parentFieldManager.resolveParentObject(
-          this.parentRelOptions,
-          rel
-        );
-        if (!parentObj) {
-          console.warn(
-            `⚠️ Could not resolve parent object for relationship: ${rel}`
-          );
-          return Promise.resolve(); // Gracefully skip this one
-        }
-
-        return getFieldsForObject({ objectApiName: parentObj })
-          .then((fields) => this.addParentFieldConfig(rel, fields))
-          .catch((error) =>
-            console.error(
-              `Error fetching parent fields for ${rel}`,
-              JSON.stringify(error)
-            )
-          );
+      const parentObj = parentFieldManager.resolveParentObject(
+        this.parentRelOptions,
+        rel
+      );
+      if (!parentObj) {
+        console.warn(`⚠️ Could not resolve parent object for: ${rel}`);
+        return Promise.resolve();
       }
-      return Promise.resolve();
+
+      return getFieldsForObject({ objectApiName: parentObj })
+        .then((fields) => this.addParentFieldConfig(rel, fields))
+        .catch((error) =>
+          console.error(`Error fetching parent fields for ${rel}`, error)
+        );
     });
 
     Promise.all(fetchPromises).then(() => {
@@ -334,38 +323,6 @@ export default class SoqlBuilder extends LightningElement {
     });
   }
 
-  fetchParentFields(parentObjectName, relationshipName) {
-    if (!parentObjectName) return;
-
-    getFieldsForObject({ objectApiName: parentObjectName }).then((fields) => {
-      if (!Array.isArray(fields) || fields.length === 0) {
-        console.warn(
-          "⚠️ No fields returned for parent object:",
-          parentObjectName
-        );
-        this.parentRelFieldOptions = [];
-        return;
-      }
-
-      this.parentRelFieldOptions = fields
-        .map((f) => {
-          const fullName = `${relationshipName}.${f.name}`;
-          console.log("✅ Parent field option:", fullName);
-          return {
-            label: f.label || f.name,
-            value: fullName
-          };
-        })
-        .sort((a, b) =>
-          a.label.localeCompare(b.label, undefined, {
-            numeric: true,
-            sensitivity: "base"
-          })
-        );
-
-      this.filteredParentRelFieldOptions = [...this.parentRelFieldOptions];
-    });
-  }
 
   addParentFieldConfig(rel, fields) {
     const options = fields
@@ -375,7 +332,7 @@ export default class SoqlBuilder extends LightningElement {
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
 
-    const selected = this.selectParentFields?.[rel] || [`${rel}.Id`];
+    const selected = this.selectParentRelFields?.[rel] || [`${rel}.Id`];
 
     this.parentRelFieldOptions = {
       ...this.parentRelFieldOptions,
@@ -392,9 +349,7 @@ export default class SoqlBuilder extends LightningElement {
       [rel]: options
     };
 
-    Promise.resolve(() => {
-      this.debouncedUpdatePreview;
-    });
+    this.debouncedUpdatePreview();
   }
 
   // ----------------- CHILD SELECTION --------------------
