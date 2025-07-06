@@ -8,6 +8,7 @@ public with sharing class exportController {
     public static ExportResponse emailCsv(
         String objectName,
         List<Map<String, Object>> data,
+        List<String> headers,
         String recipientEmail
     ) {
         ExportResponse response = new ExportResponse();
@@ -24,7 +25,6 @@ public with sharing class exportController {
                 return response;
             }
 
-            List<String> headers = new List<String>(data[0].keySet());
             List<String> csvLines = new List<String>();
             csvLines.add(String.join(headers, ','));
 

@@ -6,7 +6,7 @@ export default class whereClauseBuilder {
     filters = [],
     useAdvancedMode = false,
     rawWhereClause = "",
-    fieldMetadata = {}
+    mainFieldMetadata = {}
   ) {
     // 🧠 Advanced mode: use raw WHERE clause directly
     if (useAdvancedMode && rawWhereClause?.trim()) {
@@ -23,7 +23,7 @@ export default class whereClauseBuilder {
           (f) => f.field && f.operator && f.value !== undefined && f.value !== ""
         )
         .map((f) => {
-          const meta = fieldMetadata[f.field];
+          const meta = mainFieldMetadata[f.field];
           const fieldType = typeof meta === "string" ? meta : meta?.type || "String";
 
           const formattedValue = formatFilterValue(f.field, fieldType, f.value);

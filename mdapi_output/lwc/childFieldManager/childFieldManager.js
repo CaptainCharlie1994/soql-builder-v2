@@ -6,11 +6,11 @@ export default class childFieldManager {
     }));
   }
 
-  static buildConfig(rel, fields = [], selectedFields = []) {
+  static buildConfig(rel, fields = [], selectedMainFields = []) {
     return {
       rel,
       options: this.buildOptions(fields),
-      selected: selectedFields.length > 0 ? selectedFields : ['Id']
+      selected: selectedMainFields.length > 0 ? selectedMainFields : ['Id']
     };
   }
 }

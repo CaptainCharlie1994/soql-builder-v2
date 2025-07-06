@@ -10,30 +10,30 @@ export default class queryFormatter {
 
   static generatePreview({
     selectedObject,
-    selectedFields = [],
-    selectedParentFields = [],
+    selectedMainFields = [],
+    selectedParentRelFields = [],
     filters = [],
-    selectedChildFields = {},
+    selectedChildRelFields = {},
     rawWhereClause = "",
     useAdvancedMode = false,
-    fieldMetadata = {}
+    mainFieldMetadata = {}
   }) {
-    if (!selectedObject || selectedFields.length === 0) {
+    if (!selectedObject || selectedMainFields.length === 0) {
 
       return null;
     }
 
     //── Combine base fields, parent fields, and filter fields ─────────────
     const baseFields = new Set([
-      ...(selectedFields || []),
-      ...(selectedParentFields || []),
+      ...(selectedMainFields || []),
+      ...(selectedParentRelFields || []),
       ...filters.map((f) => f.field).filter(Boolean)
     ]);
 
     const fieldList = Array.from(baseFields).join(", ");
 
     //── Build subqueries for child relationships ──────────────────────────
-    const validChildFields = Object.entries(selectedChildFields).filter(
+    const validChildFields = Object.entries(selectedChildRelFields).filter(
       ([rel, fields]) => Array.isArray(fields) && fields.length > 0
     );
 
@@ -46,7 +46,7 @@ export default class queryFormatter {
       filters,
       useAdvancedMode,
       rawWhereClause,
-      fieldMetadata
+      mainFieldMetadata
     );
 
     //── Assemble full query ───────────────────────────────────────────────

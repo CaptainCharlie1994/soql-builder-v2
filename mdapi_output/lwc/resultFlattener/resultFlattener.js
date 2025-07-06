@@ -1,14 +1,14 @@
 export default class resultFlattener {
   static flattenResults(
     data,
-    selectedParentFields = [],
-    selectedChildFields = {}
+    selectedParentRelFields = [],
+    selectedChildRelFields = {}
   ) {
     const allHeaders = new Set();
     let flattenedRows = [];
 
     try {
-      const normalizedChildKeys = Object.keys(selectedChildFields).reduce(
+      const normalizedChildKeys = Object.keys(selectedChildRelFields).reduce(
         (map, key) => {
           map[key.toLowerCase()] = key;
           return map;
@@ -45,7 +45,7 @@ export default class resultFlattener {
         (value?.records && Array.isArray(value.records));
 
       const isParentFieldReference = (key) =>
-        selectedParentFields.some((pf) => pf.startsWith(`${key}.`));
+        selectedParentRelFields.some((pf) => pf.startsWith(`${key}.`));
 
       flattenedRows = data.map((record) => {
         const row = {};
@@ -54,20 +54,20 @@ export default class resultFlattener {
           if (isSubquery(value)) {
             const relKey = key.toLowerCase();
             const canonicalKey = normalizedChildKeys[relKey] || key;
-            const selectedFields = selectedChildFields?.[canonicalKey] ||
-              selectedChildFields?.[key] ||
-              selectedChildFields?.[relKey] || ["Id"];
+            const selectedMainFields = selectedChildRelFields?.[canonicalKey] ||
+              selectedChildRelFields?.[key] ||
+              selectedChildRelFields?.[relKey] || ["Id"];
             const children = value.records || [];
 
             if (children.length === 0) {
-              selectedFields.forEach((field) => {
+              selectedMainFields.forEach((field) => {
                 const header = `${key}_1_${field}`;
                 row[header] = "";
                 allHeaders.add(header);
               });
             } else {
               children.forEach((child, idx) => {
-                selectedFields.forEach((fieldPath) => {
+                selectedMainFields.forEach((fieldPath) => {
                   const parts = fieldPath.split(".");
                   let val = child;
                   parts.forEach((p) => (val = val?.[p]));
@@ -79,7 +79,7 @@ export default class resultFlattener {
               });
             }
           } else if (isParentFieldReference(key) && typeof value === "object") {
-            selectedParentFields.forEach((pf) => {
+            selectedParentRelFields.forEach((pf) => {
               if (pf.startsWith(`${key}.`)) {
                 const nestedKey = pf.split(".")[1];
                 const subVal = value?.[nestedKey];

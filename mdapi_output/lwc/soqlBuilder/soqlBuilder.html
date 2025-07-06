@@ -28,9 +28,9 @@
           <lightning-dual-listbox
             name="fieldSelector"
             label="Select Fields"
-            options={fieldOptions}
-            value={selectedFields}
-            onchange={handleFieldSelection}
+            options={mainFieldOptions}
+            value={selectedMainFields}
+            onchange={handleMainFieldSelection}
             class="slds-m-bottom_large"
           ></lightning-dual-listbox>
         </template>
@@ -39,24 +39,24 @@
         <template if:true={hasParentOptions}>
           <lightning-combobox
             label="Parent Relationship"
-            value={selectedParent}
-            options={parentRelationshipOptions}
-            onchange={handleParentSelect}
+            value={selectedParentRels}
+            options={parentRelOptions}
+            onchange={handleParentRelSelection}
             placeholder="Select a parent relationship"
             class="slds-m-bottom_large"
           ></lightning-combobox>
         </template>
 
         <!-- Parent Field Selector -->
-        <template if:true={selectedParent}>
+        <template if:true={selectedParentRels}>
           <lightning-dual-listbox
             name="parentFields"
             label="Select Parent Fields"
             source-label="Available"
             selected-label="Selected"
-            options={parentFieldOptions}
-            value={selectedParentFields}
-            onchange={handleParentFieldChange}
+            options={parentRelFieldOptions}
+            value={selectedParentRelFields}
+            onchange={handleParentRelFieldChange}
             class="slds-m-bottom_large"
           ></lightning-dual-listbox>
         </template>
@@ -68,8 +68,8 @@
             label="Child Relationships"
             source-label="Available"
             selected-label="Included"
-            options={childRelationships}
-            value={selectedRelationships}
+            options={childRelOptions}
+            value={selectedChildRels}
             onchange={handleRelationshipSelection}
             class="slds-m-bottom_large"
           ></lightning-dual-listbox>
@@ -88,7 +88,7 @@
                 selected-label="Selected"
                 options={cfg.options}
                 value={cfg.selected}
-                onchange={handleChildFieldSelection}
+                onchange={handleChildFieldRelChange}
                 class="slds-m-bottom_large"
               ></lightning-dual-listbox>
             </div>
@@ -119,7 +119,7 @@
                       name="field"
                       data-index={filter.index}
                       value={filter.field}
-                      options={fieldOptions}
+                      options={mainFieldOptions}
                       onchange={handleFilterChange}
                     ></lightning-combobox>
                   </div>

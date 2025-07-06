@@ -41,33 +41,55 @@
                   source-label="Available"
                   selected-label="Selected"
                   options={filteredFieldOptions}
-                  value={selectedFields}
-                  onchange={handleFieldSelection}
+                  value={selectedMainFields}
+                  onchange={handleMainFieldSelection}
                 ></lightning-dual-listbox>
               </div>
             </template>
             <!--+++++++++ PARENT SELECTOR +++++++++-->
             <template if:true={selectedObject}>
               <div class="section-card">
-                  <h2 class="section-header">Parent Selector</h2>
-                  <lightning-dual-listbox
-                    name="relatedLists"
-                    source-label="Available"
-                    selected-label="Included"
-                    value={selectedParent}
-                    options={filteredParentRelOptions}
-                    onchange={handleParentSelect}
-                  ></lightning-dual-listbox>
-                <template if:true={selectedParent}>
-                  <!--+++++++++ PARENT FIELD SELECTOR +++++++++-->
-                  <lightning-dual-listbox
-                    name="parentFields"
-                    source-label="Available"
-                    selected-label="Selected"
-                    options={filteredParentFieldOptions}
-                    value={selectedParentFields}
-                    onchange={handleParentFieldChange}
-                  ></lightning-dual-listbox>
+                <h2 class="section-header">Parent Selector</h2>
+                <lightning-dual-listbox
+                  name="parentSelector"
+                  source-label="Available"
+                  selected-label="Included"
+                  options={filteredParentRelOptions}
+                  value={selectedParentRels}
+                  onchange={handleParentRelSelection}
+                ></lightning-dual-listbox>
+                <!--+++++++++ PARENT FIELD SELECTOR +++++++++-->
+                <template if:true={ui.parentFieldConfigs}>
+                  <lightning-accordion
+                    class="parent-section"
+                    allow-multiple-sections-open
+                    active-section-name={ui.openParentSections}
+                  >
+                    <template for:each={ui.parentFieldConfigs} for:item="pfg">
+                      <lightning-accordion-section
+                        key={pfg.rel}
+                        name={pfg.rel}
+                        label={pfg.label}
+                      >
+                        <lightning-input
+                          type="search"
+                          data-list-type="parent"
+                          data-options-key={pfg.rel}
+                          placeholder="Search fields…"
+                          onchange={handleOptionsSearch}
+                          class="slds-m-bottom_x-small"
+                        ></lightning-input>
+                        <lightning-dual-listbox
+                          name={pfg.rel}
+                          source-label="Available"
+                          selected-label="Selected"
+                          options={pfg.options}
+                          value={pfg.selected}
+                          onchange={handleParentRelFieldChange}
+                        ></lightning-dual-listbox>
+                      </lightning-accordion-section>
+                    </template>
+                  </lightning-accordion>
                 </template>
               </div>
             </template>
@@ -79,8 +101,8 @@
                   name="relatedLists"
                   source-label="Available"
                   selected-label="Included"
-                  options={childRelationships}
-                  value={selectedRelationships}
+                  options={childRelOptions}
+                  value={selectedChildRels}
                   onchange={handleRelationshipSelection}
                 ></lightning-dual-listbox>
                 <!--+++++++++ CHIELD FIELD SELECTOR +++++++++-->
@@ -110,7 +132,7 @@
                           selected-label="Selected"
                           options={cfg.options}
                           value={cfg.selected}
-                          onchange={handleChildFieldSelection}
+                          onchange={handleChildFieldRelChange}
                         ></lightning-dual-listbox>
                       </lightning-accordion-section>
                     </template>
@@ -147,7 +169,7 @@
                             name="field"
                             data-index={filter.index}
                             value={filter.field}
-                            options={fieldOptions}
+                            options={mainFieldOptions}
                             onchange={handleFilterChange}
                           ></lightning-combobox>
                         </div>
@@ -267,7 +289,7 @@
                         <span>
                           Showing only the first 50 rows. For the full dataset,
                           click
-                          <strong>Email CSV</strong>.
+                          <strong> Email CSV Results</strong>.
                         </span>
                       </div>
                     </template>

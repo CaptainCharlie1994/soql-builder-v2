@@ -11,10 +11,10 @@ public with sharing class SoqlBuilderHelper {
   @AuraEnabled
   public static String getSoqlPreview(
     String objectApiName,
-    List<String> selectedFields,
-    List<String> selectedParentFields,
+    List<String> selectedMainFields,
+    List<String> selectedParentRelFields,
     String filtersJson,
-    Map<String, List<String>> selectedChildFields,
+    Map<String, List<String>> selectedChildRelFields,
     Boolean useAdvancedMode,
     String rawWhereClause,
     String orderByField,
@@ -28,8 +28,11 @@ public with sharing class SoqlBuilderHelper {
     System.debug('✅ Deserialized filters: ' + JSON.serialize(filters));
     System.debug('filters raw: ' + JSON.serialize(filters));
     Set<String> allFields = new Set<String>();
-    allFields.addAll(selectedFields);
-    allFields.addAll(selectedParentFields);
+    allFields.addAll(selectedMainFields);
+    allFields.addAll(selectedParentRelFields);
+    System.debug('Main Fields :' + selectedMainFields);
+    System.debug('Parent Rel Fields :' + selectedParentRelFields);
+    System.debug('Combined Fields : ' + allFields);
     for (FilterDTO f : filters) {
       System.debug('Filters: ' + f);
     }
@@ -40,8 +43,8 @@ public with sharing class SoqlBuilderHelper {
 
     //Build sub-queries for children
     List<String> subqueries = new List<String>();
-    for (String relName : selectedChildFields.keySet()) {
-      List<String> cols = selectedChildFields.get(relName);
+    for (String relName : selectedChildRelFields.keySet()) {
+      List<String> cols = selectedChildRelFields.get(relName);
       if (cols != null && !cols.isEmpty()) {
         subqueries.add(
           '(SELECT ' + String.join(cols, ', ') + ' FROM ' + relName + ')'
