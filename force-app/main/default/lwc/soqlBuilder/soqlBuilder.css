@@ -329,3 +329,11 @@
 .right-panel-content {
   animation: fadeIn 0.3s ease-in-out;
 }
+
+.query-panel{
+  position:sticky;
+  bottom: 0;
+  width: 100%;
+  z-index: 1000;
+  background-color: #ffffff35;
+}

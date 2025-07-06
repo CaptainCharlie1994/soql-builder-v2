@@ -4,234 +4,233 @@
     <!--+++++++++ LEFT PANEL +++++++++-->
     <div class={ui.leftPanelClass}>
       <div class="builder-layout">
-        <div class="main-section-header">SOQL Builder</div>
-          <div class="builder-wrapper">
-            <template if:true={objectOptions.length}>
-              <!--+++++++++ INITIAL OBJECT SELECTOR +++++++++-->
-              <div class="section-card">
-                <div class="slds-m-bottom_medium">
-                  <lightning-input
-                    type="checkbox"
-                    label="Include Non-Object Types"
-                    checked={includeNonObjects}
-                    onchange={handleToggleInclude}
-                  ></lightning-input>
-                </div>
-                <h2 class="section-header">Object Selector</h2>
-                <lightning-combobox
-                  value={selectedObject}
-                  options={objectOptions}
-                  onchange={handleObjectChange}
-                ></lightning-combobox>
-              </div>
-            </template>
-            <!--+++++++++ INITIAL OBJECTS FIELD SELECTOR +++++++++-->
-            <template if:true={dualListBoxReady}>
-              <div class="section-card">
-                <h2 class="section-header">Field Selector</h2>
+        <div class="builder-wrapper">
+          <template if:true={objectOptions.length}>
+            <!--+++++++++ INITIAL OBJECT SELECTOR +++++++++-->
+            <div class="section-card">
+              <div class="slds-m-bottom_medium">
                 <lightning-input
-                  type="search"
-                  placeholder="Search fields…"
-                  data-list-type="main"
-                  onchange={handleOptionsSearch}
-                  class="slds-m-bottom_x-small"
+                  type="checkbox"
+                  label="Include Non-Object Types"
+                  checked={includeNonObjects}
+                  onchange={handleToggleInclude}
                 ></lightning-input>
-                <lightning-dual-listbox
-                  name="fieldSelector"
-                  source-label="Available"
-                  selected-label="Selected"
-                  options={filteredFieldOptions}
-                  value={selectedMainFields}
-                  onchange={handleMainFieldSelection}
-                ></lightning-dual-listbox>
               </div>
-            </template>
-            <!--+++++++++ PARENT SELECTOR +++++++++-->
-            <template if:true={selectedObject}>
-              <div class="section-card">
-                <h2 class="section-header">Parent Selector</h2>
-                <lightning-dual-listbox
-                  name="parentSelector"
-                  source-label="Available"
-                  selected-label="Included"
-                  options={filteredParentRelOptions}
-                  value={selectedParentRels}
-                  onchange={handleParentRelSelection}
-                ></lightning-dual-listbox>
-                <!--+++++++++ PARENT FIELD SELECTOR +++++++++-->
-                <template if:true={ui.parentFieldConfigs}>
-                  <lightning-accordion
-                    class="parent-section"
-                    allow-multiple-sections-open
-                    active-section-name={ui.openParentSections}
-                  >
-                    <template for:each={ui.parentFieldConfigs} for:item="pfg">
-                      <lightning-accordion-section
-                        key={pfg.rel}
-                        name={pfg.rel}
-                        label={pfg.label}
-                      >
-                        <lightning-input
-                          type="search"
-                          data-list-type="parent"
-                          data-options-key={pfg.rel}
-                          placeholder="Search fields…"
-                          onchange={handleOptionsSearch}
-                          class="slds-m-bottom_x-small"
-                        ></lightning-input>
-                        <lightning-dual-listbox
-                          name={pfg.rel}
-                          source-label="Available"
-                          selected-label="Selected"
-                          options={pfg.options}
-                          value={pfg.selected}
-                          onchange={handleParentRelFieldChange}
-                        ></lightning-dual-listbox>
-                      </lightning-accordion-section>
-                    </template>
-                  </lightning-accordion>
-                </template>
-              </div>
-            </template>
-            <!--+++++++++ CHILD OBJECT SELECTOR +++++++++-->
-            <template if:true={selectedObject}>
-              <div class="section-card">
-                <h2 class="section-header">Child Selector</h2>
-                <lightning-dual-listbox
-                  name="relatedLists"
-                  source-label="Available"
-                  selected-label="Included"
-                  options={childRelOptions}
-                  value={selectedChildRels}
-                  onchange={handleRelationshipSelection}
-                ></lightning-dual-listbox>
-                <!--+++++++++ CHIELD FIELD SELECTOR +++++++++-->
-                <template if:true={ui.childFieldConfigs}>
-                  <lightning-accordion
-                    class="child-section"
-                    allow-multiple-sections-open
-                    active-section-name={ui.openChildSections}
-                  >
-                    <template for:each={ui.childFieldConfigs} for:item="cfg">
-                      <lightning-accordion-section
-                        key={cfg.rel}
-                        name={cfg.rel}
-                        label={cfg.label}
-                      >
-                        <lightning-input
-                          type="search"
-                          data-list-type="child"
-                          data-options-key={cfg.rel}
-                          placeholder="Search fields…"
-                          onchange={handleOptionsSearch}
-                          class="slds-m-bottom_x-small"
-                        ></lightning-input>
-                        <lightning-dual-listbox
-                          name={cfg.rel}
-                          source-label="Available"
-                          selected-label="Selected"
-                          options={cfg.options}
-                          value={cfg.selected}
-                          onchange={handleChildFieldRelChange}
-                        ></lightning-dual-listbox>
-                      </lightning-accordion-section>
-                    </template>
-                  </lightning-accordion>
-                </template>
-              </div>
-            </template>
-            <!--+++++++++ WHERE CLAUSE BUILDER +++++++++-->
-            <template if:true={ui.showFieldSelector}>
-              <div class="section-card">
-                <div class="slds-m-top_medium">
-                  <h2 class="section-header">WHERE Clause</h2>
-                  <div
-                    class="slds-grid slds-grid_align-spread slds-m-bottom_small"
-                  >
-                    <!--+++++++++ USEADVANCE BUTTON +++++++++-->
-                    <lightning-button-icon
-                      icon-name={whereToggleIcon}
-                      alternative-text="Toggle Advanced Mode"
-                      title="Toggle WHERE Clause Mode"
-                      onclick={toggleWhereMode}
-                    ></lightning-button-icon>
-                  </div>
-                  <!--+++++++++ MANUAL WHERE CLAUSE BUILDER +++++++++-->
-                  <template if:false={useAdvancedMode}>
-                    <template
-                      for:each={ui.filtersWithOperatorOptions}
-                      for:item="filter"
+              <h2 class="section-header">Object Selector</h2>
+              <lightning-combobox
+                value={selectedObject}
+                options={objectOptions}
+                onchange={handleObjectChange}
+              ></lightning-combobox>
+            </div>
+          </template>
+          <!--+++++++++ INITIAL OBJECTS FIELD SELECTOR +++++++++-->
+          <template if:true={dualListBoxReady}>
+            <div class="section-card">
+              <h2 class="section-header">Field Selector</h2>
+              <lightning-input
+                type="search"
+                placeholder="Search fields…"
+                data-list-type="main"
+                onchange={handleOptionsSearch}
+                class="slds-m-bottom_x-small"
+              ></lightning-input>
+              <lightning-dual-listbox
+                name="fieldSelector"
+                source-label="Available"
+                selected-label="Selected"
+                options={filteredFieldOptions}
+                value={selectedMainFields}
+                onchange={handleMainFieldSelection}
+              ></lightning-dual-listbox>
+            </div>
+          </template>
+          <!--+++++++++ PARENT SELECTOR +++++++++-->
+          <template if:true={selectedObject}>
+            <div class="section-card">
+              <h2 class="section-header">Parent Selector</h2>
+              <lightning-dual-listbox
+                name="parentSelector"
+                source-label="Available"
+                selected-label="Included"
+                options={filteredParentRelOptions}
+                value={selectedParentRels}
+                onchange={handleParentRelSelection}
+              ></lightning-dual-listbox>
+              <!--+++++++++ PARENT FIELD SELECTOR +++++++++-->
+              <template if:true={ui.parentFieldConfigs}>
+                <lightning-accordion
+                  class="parent-section"
+                  allow-multiple-sections-open
+                  active-section-name={ui.openParentSections}
+                >
+                  <template for:each={ui.parentFieldConfigs} for:item="pfg">
+                    <lightning-accordion-section
+                      key={pfg.rel}
+                      name={pfg.rel}
+                      label={pfg.label}
                     >
-                      <div key={filter.id} class="filter-row">
-                        <div>
-                          <lightning-combobox
-                            label="Field"
-                            name="field"
-                            data-index={filter.index}
-                            value={filter.field}
-                            options={mainFieldOptions}
-                            onchange={handleFilterChange}
-                          ></lightning-combobox>
-                        </div>
-                        <div>
-                          <lightning-combobox
-                            label="Operator"
-                            name="operator"
-                            data-index={filter.index}
-                            value={filter.operator}
-                            options={filter.safeOperators}
-                            disabled={filter.isDisabled}
-                            onchange={handleFilterChange}
-                          ></lightning-combobox>
-                        </div>
-                        <div>
-                          <lightning-input
-                            label="Value"
-                            name="value"
-                            data-index={filter.index}
-                            value={filter.value}
-                            onchange={handleFilterChange}
-                          ></lightning-input>
-                        </div>
-                        <div class="slds-align-bottom">
-                          <lightning-button-icon
-                            icon-name="utility:close"
-                            alternative-text="Remove Filter"
-                            title="Remove Filter"
-                            data-index={filter.index}
-                            onclick={handleRemoveFilter}
-                          ></lightning-button-icon>
-                        </div>
+                      <lightning-input
+                        type="search"
+                        data-list-type="parent"
+                        data-options-key={pfg.rel}
+                        placeholder="Search fields…"
+                        onchange={handleOptionsSearch}
+                        class="slds-m-bottom_x-small"
+                      ></lightning-input>
+                      <lightning-dual-listbox
+                        name={pfg.rel}
+                        source-label="Available"
+                        selected-label="Selected"
+                        options={pfg.options}
+                        value={pfg.selected}
+                        onchange={handleParentRelFieldChange}
+                      ></lightning-dual-listbox>
+                    </lightning-accordion-section>
+                  </template>
+                </lightning-accordion>
+              </template>
+            </div>
+          </template>
+          <!--+++++++++ CHILD OBJECT SELECTOR +++++++++-->
+          <template if:true={selectedObject}>
+            <div class="section-card">
+              <h2 class="section-header">Child Selector</h2>
+              <lightning-dual-listbox
+                name="relatedLists"
+                source-label="Available"
+                selected-label="Included"
+                options={childRelOptions}
+                value={selectedChildRels}
+                onchange={handleRelationshipSelection}
+              ></lightning-dual-listbox>
+              <!--+++++++++ CHIELD FIELD SELECTOR +++++++++-->
+              <template if:true={ui.childFieldConfigs}>
+                <lightning-accordion
+                  class="child-section"
+                  allow-multiple-sections-open
+                  active-section-name={ui.openChildSections}
+                >
+                  <template for:each={ui.childFieldConfigs} for:item="cfg">
+                    <lightning-accordion-section
+                      key={cfg.rel}
+                      name={cfg.rel}
+                      label={cfg.label}
+                    >
+                      <lightning-input
+                        type="search"
+                        data-list-type="child"
+                        data-options-key={cfg.rel}
+                        placeholder="Search fields…"
+                        onchange={handleOptionsSearch}
+                        class="slds-m-bottom_x-small"
+                      ></lightning-input>
+                      <lightning-dual-listbox
+                        name={cfg.rel}
+                        source-label="Available"
+                        selected-label="Selected"
+                        options={cfg.options}
+                        value={cfg.selected}
+                        onchange={handleChildFieldRelChange}
+                      ></lightning-dual-listbox>
+                    </lightning-accordion-section>
+                  </template>
+                </lightning-accordion>
+              </template>
+            </div>
+          </template>
+          <!--+++++++++ WHERE CLAUSE BUILDER +++++++++-->
+          <template if:true={ui.showFieldSelector}>
+            <div class="section-card">
+              <div class="slds-m-top_medium">
+                <h2 class="section-header">WHERE Clause</h2>
+                <div
+                  class="slds-grid slds-grid_align-spread slds-m-bottom_small"
+                >
+                  <!--+++++++++ USEADVANCE BUTTON +++++++++-->
+                  <lightning-button-icon
+                    icon-name={whereToggleIcon}
+                    alternative-text="Toggle Advanced Mode"
+                    title="Toggle WHERE Clause Mode"
+                    onclick={toggleWhereMode}
+                  ></lightning-button-icon>
+                </div>
+                <!--+++++++++ MANUAL WHERE CLAUSE BUILDER +++++++++-->
+                <template if:false={useAdvancedMode}>
+                  <template
+                    for:each={ui.filtersWithOperatorOptions}
+                    for:item="filter"
+                  >
+                    <div key={filter.id} class="filter-row">
+                      <div>
+                        <lightning-combobox
+                          label="Field"
+                          name="field"
+                          data-index={filter.index}
+                          value={filter.field}
+                          options={mainFieldOptions}
+                          onchange={handleFilterChange}
+                        ></lightning-combobox>
                       </div>
-                    </template>
-                    <div class="slds-m-top_small slds-m-bottom_medium">
-                      <lightning-button
-                        label="Add Filter"
-                        icon-name="utility:add"
-                        onclick={addFilter}
-                      ></lightning-button>
+                      <div>
+                        <lightning-combobox
+                          label="Operator"
+                          name="operator"
+                          data-index={filter.index}
+                          value={filter.operator}
+                          options={filter.safeOperators}
+                          disabled={filter.isDisabled}
+                          onchange={handleFilterChange}
+                        ></lightning-combobox>
+                      </div>
+                      <div>
+                        <lightning-input
+                          label="Value"
+                          name="value"
+                          data-index={filter.index}
+                          value={filter.value}
+                          onchange={handleFilterChange}
+                        ></lightning-input>
+                      </div>
+                      <div class="slds-align-bottom">
+                        <lightning-button-icon
+                          icon-name="utility:close"
+                          alternative-text="Remove Filter"
+                          title="Remove Filter"
+                          data-index={filter.index}
+                          onclick={handleRemoveFilter}
+                        ></lightning-button-icon>
+                      </div>
                     </div>
                   </template>
-                  <!--+++++++++ ADVANCED WHERE CLAUSE BUILDER +++++++++-->
-                  <template if:true={useAdvancedMode}>
-                    <lightning-textarea
-                      label="Manual WHERE Clause"
-                      value={rawWhereClause}
-                      onchange={handleWhereInputChange}
-                      placeholder="e.g. Status = 'Open' AND CreatedDate > LAST_N_DAYS:30"
-                      class="slds-m-top_small"
-                    ></lightning-textarea>
-                  </template>
-                </div>
-                <c-soql-builder-controls
-                  oncontrolsupdate={handleControlsUpdate}
-                  limit={limit}
-                  order-by-field={orderByField}
-                  order-direction={orderDirection}
-                ></c-soql-builder-controls>
+                  <div class="slds-m-top_small slds-m-bottom_medium">
+                    <lightning-button
+                      label="Add Filter"
+                      icon-name="utility:add"
+                      onclick={addFilter}
+                    ></lightning-button>
+                  </div>
+                </template>
+                <!--+++++++++ ADVANCED WHERE CLAUSE BUILDER +++++++++-->
+                <template if:true={useAdvancedMode}>
+                  <lightning-textarea
+                    label="Manual WHERE Clause"
+                    value={rawWhereClause}
+                    onchange={handleWhereInputChange}
+                    placeholder="e.g. Status = 'Open' AND CreatedDate > LAST_N_DAYS:30"
+                    class="slds-m-top_small"
+                  ></lightning-textarea>
+                </template>
               </div>
-            </template>
-          </div>
+              <c-soql-builder-controls
+                oncontrolsupdate={handleControlsUpdate}
+                limit={limit}
+                order-by-field={orderByField}
+                order-direction={orderDirection}
+              ></c-soql-builder-controls>
+            </div>
+          </template>
+        </div>
       </div>
     </div>
 
@@ -255,63 +254,61 @@
         <div class="right-panel-content">
           <template if:true={isPanelOpen}>
             <div class="query-panel-wrapper">
-              <div class="sticky">
-                <!--+++++++++ SOQL PREVIEW WINDOW +++++++++-->
-                <div class="query-panel">
-                  <div class="section-card">
-                    <div class="main-section-header">SOQL Preview</div>
-                    <pre class="soql-preview">{ui.previewText}</pre>
-                  </div>
-                </div>
-              </div>
               <template if:true={queryResults}>
                 <div class="section-card">
                   <div class="main-section-header">Query Results</div>
-                    <!--+++++++++  EXPORT TABLE   +++++++++-->
-                    <div class="scrollable-table-container">
-                      <lightning-datatable
-                        key-field="Id"
-                        data={ui.visibleResults}
-                        columns={tableColumns}
-                      ></lightning-datatable>
+                  <!--+++++++++  EXPORT TABLE   +++++++++-->
+                  <div class="scrollable-table-container">
+                    <lightning-datatable
+                      key-field="Id"
+                      data={ui.visibleResults}
+                      columns={tableColumns}
+                    ></lightning-datatable>
+                  </div>
+                  <template if:true={ui.showExportNotice}>
+                    <div
+                      class="slds-notify slds-notify_alert slds-theme_info slds-m-top_small"
+                      role="alert"
+                    >
+                      <lightning-icon
+                        icon-name="utility:info"
+                        alternative-text="Info"
+                        size="x-small"
+                        class="slds-m-right_x-small"
+                      ></lightning-icon>
+                      <span>
+                        Showing only the first 50 rows. For the full dataset,
+                        click
+                        <strong> Email CSV Results</strong>.
+                      </span>
                     </div>
-                    <template if:true={ui.showExportNotice}>
-                      <div
-                        class="slds-notify slds-notify_alert slds-theme_info slds-m-top_small"
-                        role="alert"
-                      >
-                        <lightning-icon
-                          icon-name="utility:info"
-                          alternative-text="Info"
-                          size="x-small"
-                          class="slds-m-right_x-small"
-                        ></lightning-icon>
-                        <span>
-                          Showing only the first 50 rows. For the full dataset,
-                          click
-                          <strong> Email CSV Results</strong>.
-                        </span>
-                      </div>
-                    </template>
-                    <!--+++++++++ ACTION BUTTONS +++++++++-->
-                    <lightning-button
-                      label="Run Query"
-                      title="Run SOQL Query"
-                      onclick={handleBuildQuery}
-                      class="action-button"
-                    ></lightning-button>
-                    <lightning-button
-                      label="Email CSV Results"
-                      onclick={handleExport}
-                      class="action-button"
-                    ></lightning-button>
-                  
+                  </template>
+                  <!--+++++++++ ACTION BUTTONS +++++++++-->
+                  <lightning-button
+                    label="Run Query"
+                    title="Run SOQL Query"
+                    onclick={handleBuildQuery}
+                    class="action-button"
+                  ></lightning-button>
+                  <lightning-button
+                    label="Email CSV Results"
+                    onclick={handleExport}
+                    class="action-button"
+                  ></lightning-button>
                 </div>
               </template>
             </div>
           </template>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!--+++++++++ SOQL PREVIEW WINDOW +++++++++-->
+  <div class="query-panel">
+    <div class="section-card">
+      <div class="main-section-header">SOQL Preview</div>
+      <pre class="soql-preview">{ui.previewText}</pre>
     </div>
   </div>
 </template>
