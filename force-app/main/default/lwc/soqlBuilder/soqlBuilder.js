@@ -11,11 +11,10 @@ import emailCsv from "@salesforce/apex/exportController.emailCsv";
 import debugFormatter from "c/debugFormatter";
 import operatorResolver from "c/operatorResolver";
 import parentFieldManager from "c/parentFieldManager";
-import queryFormatter from "c/queryFormatter";
 import resultFlattener from "c/resultFlattener";
 import { filterOptions } from "c/listFilterUtils";
 import { debounce } from "c/debounce";
-import { computeUIValues } from './soqlBuilderGetters';
+import { computeUIValues } from "./soqlBuilderGetters";
 
 //Import Salesforce Utility
 import { getRecord } from "lightning/uiRecordApi";
@@ -104,8 +103,6 @@ export default class SoqlBuilder extends LightningElement {
   connectedCallback() {
     this.debouncedUpdatePreview = debounce(this.updatePreview.bind(this), 300);
     console.log("✅ soqlBuilder component mounted");
-
-
   }
 
   //Wired objects to invoke Apex Classes.
@@ -155,7 +152,6 @@ export default class SoqlBuilder extends LightningElement {
     getFieldsForObject({ objectApiName: this.selectedObject })
       .then((fields) => {
         // ── a) Build field metadata ─────────────────────────────────────
-        console.log(JSON.stringify(fields));
         this.fieldMetadata = fields.reduce((m, f) => {
           if (f?.name) m[f.name] = f.type;
           return m;
@@ -215,33 +211,6 @@ export default class SoqlBuilder extends LightningElement {
         console.error("Error fetching fields:", error);
         this.dualListBoxReady = false;
       });
-  }
-
-  fetchParentFields(parentObjectName, relationshipName) {
-    if (!parentObjectName) return;
-
-    getFieldsForObject({ objectApiName: parentObjectName }).then((fields) => {
-      if (!Array.isArray(fields) || fields.length === 0) {
-        console.warn(
-          "⚠️ No fields returned for parent object:",
-          parentObjectName
-        );
-        this.parentFieldOptions = [];
-        return;
-      }
-
-      const optionsList = fields.map((f) => {
-        const fullName = `${relationshipName}.${f.name}`;
-        console.log("✅ Parent field option:", fullName);
-        return {
-          label: f.label || f.name,
-          value: fullName
-        };
-      });
-
-      this.parentFieldOptions = optionsList;
-      this.filteredParentFieldOptions = [...optionsList];
-    });
   }
 
   handleRelationshipSelection(event) {
@@ -331,9 +300,16 @@ export default class SoqlBuilder extends LightningElement {
         filter.operator = "="; // fallback
       }
     }
+    console.log(
+      "This.rawWhereClause: ",
+      JSON.stringify(this.rawWhereClause)
+        ? JSON.stringify(this.rawWhereClause)
+        : "PlaceHolder for RawWhereClause"
+    );
 
     updated[index] = filter;
     this.filters = updated;
+    console.log("This.filters: " + JSON.stringify(this.filters));
     this.debouncedUpdatePreview();
   }
 
@@ -358,7 +334,6 @@ export default class SoqlBuilder extends LightningElement {
     this.getSoqlQueryFromApex()
       .then((fullQuery) => {
         this.soqlPreview = fullQuery;
-
         return runQuery({ soql: fullQuery });
       })
       .then((data) => {
@@ -528,11 +503,13 @@ export default class SoqlBuilder extends LightningElement {
       objectApiName: this.selectedObject,
       selectedFields: this.selectedFields,
       selectedParentFields: this.selectedParentFields,
-      filters: this.filters.map((f) => ({
-        field: f.field,
-        operator: f.operator,
-        value: f.value
-      })),
+      filtersJson: JSON.stringify(
+        this.filters.map((f) => ({
+          field: f.field,
+          operator: f.operator,
+          value: f.value
+        }))
+      ),
       selectedChildFields: this.selectedChildFields,
       useAdvancedMode: this.useAdvancedMode,
       rawWhereClause: this.rawWhereClause,
@@ -541,7 +518,7 @@ export default class SoqlBuilder extends LightningElement {
       queryLimit: this.limit
     };
 
-    return getSoqlPreview(payload); // returns a Promise
+    return getSoqlPreview(payload);
   }
 
   addFilter() {
@@ -670,19 +647,12 @@ export default class SoqlBuilder extends LightningElement {
         );
 
       this.filteredParentFieldOptions = [...this.parentFieldOptions];
-
-      // 🔍 Add this log here
-      console.log(
-        "🧾 Dual listbox options:",
-        JSON.stringify(this.filteredParentFieldOptions, null, 2)
-      );
     });
   }
 
   fetchChildRelationships() {
     getChildRelationships({ objectApiName: this.selectedObject })
       .then((result) => {
-        debugFormatter.log("Fetched child relationships raw", result);
         this.childRelationships = result.map((rel) => ({
           label: rel,
           value: rel
@@ -717,16 +687,13 @@ export default class SoqlBuilder extends LightningElement {
   }
 
   //-------- GETTERS | this was consolidated in a modulised fashion, getters are now set in soqlBuilderGetters.js
- get ui() {
-  try {
-    const values = computeUIValues(this);
-    console.log("🧪 UI Values:", values);
-    return values;
-  } catch (error) {
-    console.error("❌ Error in ui getter:", error);
-    return {};
+  get ui() {
+    try {
+      const values = computeUIValues(this);
+      return values;
+    } catch (error) {
+      console.error("❌ Error in ui getter:", JSON.stringify(error));
+      return {};
+    }
   }
-}
-
-  
 }

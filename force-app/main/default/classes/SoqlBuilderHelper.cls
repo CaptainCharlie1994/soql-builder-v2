@@ -8,12 +8,12 @@ public with sharing class SoqlBuilderHelper {
     public String value;
   }
 
-  @AuraEnabled(cacheable=true)
+  @AuraEnabled
   public static String getSoqlPreview(
     String objectApiName,
     List<String> selectedFields,
     List<String> selectedParentFields,
-    List<FilterDTO> filters,
+    String filtersJson,
     Map<String, List<String>> selectedChildFields,
     Boolean useAdvancedMode,
     String rawWhereClause,
@@ -21,14 +21,19 @@ public with sharing class SoqlBuilderHelper {
     String orderDirection,
     Integer queryLimit
   ) {
+    List<FilterDTO> filters = (List<FilterDTO>) JSON.deserialize(
+      filtersJson,
+      List<FilterDTO>.class
+    );
+    System.debug('✅ Deserialized filters: ' + JSON.serialize(filters));
+    System.debug('filters raw: ' + JSON.serialize(filters));
     Set<String> allFields = new Set<String>();
     allFields.addAll(selectedFields);
     allFields.addAll(selectedParentFields);
     for (FilterDTO f : filters) {
-      if (String.isNotBlank(f.field)) {
-        allFields.add(f.field);
-      }
+      System.debug('Filters: ' + f);
     }
+
     List<String> baseFields = new List<String>();
     baseFields.addAll(allFields);
     String fieldList = String.join(baseFields, ', ');
@@ -47,7 +52,8 @@ public with sharing class SoqlBuilderHelper {
     String whereClause = buildWhereClause(
       filters,
       useAdvancedMode,
-      rawWhereClause
+      rawWhereClause,
+      objectApiName
     );
     List<String> selectPieces = new List<String>();
     selectPieces.add(fieldList);
@@ -187,7 +193,8 @@ public with sharing class SoqlBuilderHelper {
   private static String buildWhereClause(
     List<FilterDTO> filters,
     Boolean useAdvancedMode,
-    String rawWhereClause
+    String rawWhereClause,
+    String objectApiName
   ) {
     // 1. Advanced mode: use raw WHERE clause directly
     if (useAdvancedMode && String.isNotBlank(rawWhereClause)) {
@@ -205,8 +212,8 @@ public with sharing class SoqlBuilderHelper {
       if (String.isBlank(f.field) || String.isBlank(f.operator))
         continue;
 
-      if (f.value == null || String.valueOf(f.value).trim() != '') {
-        String formatted = formatFilterValue(f.field, f.value);
+      if (f.value != null && String.valueOf(f.value).trim() != '') {
+        String formatted = formatFilterValue(objectApiName, f.field, f.value);
         clauses.add(f.field + ' ' + f.operator + ' ' + formatted);
       }
     }
@@ -214,7 +221,11 @@ public with sharing class SoqlBuilderHelper {
     return clauses.isEmpty() ? '' : ' WHERE ' + String.join(clauses, ' AND ');
   }
 
-  private static String formatFilterValue(String fieldName, Object value) {
+  private static String formatFilterValue(
+    String objectApiName,
+    String fieldName,
+    Object value
+  ) {
     if (value == null)
       return 'null';
 
@@ -222,27 +233,43 @@ public with sharing class SoqlBuilderHelper {
     if (clean.toLowerCase() == 'null')
       return 'null';
 
-    if (fieldName.toLowerCase().endsWith('id')) {
-      return '\'' + clean.replaceAll('\'', '\\\'') + '\'';
+    Schema.SObjectType objType = Schema.getGlobalDescribe().get(objectApiName);
+
+    if (objType == null)
+      return quote(clean); // fallback
+
+    Schema.DescribeSObjectResult objDesc = objType.getDescribe();
+    Map<String, Schema.SObjectField> fieldsMap = objDesc.fields.getMap();
+    System.debug('fieldsMap -> getMap() : '+fieldsMap);
+    Schema.SObjectField sfield = fieldsMap.get(fieldName);
+    System.debug('sFields -> fieldName : ' + fieldName);
+    if (sfield == null)
+      return quote(clean); // fallback
+
+    Schema.DisplayType type = sfield.getDescribe().getType();
+    System.debug('type -> sField: ' + type);
+
+    switch on type {
+      when DATE, DATETIME {
+        return clean; // no quotes
+      }
+      when BOOLEAN {
+        return clean.toLowerCase(); // true/false
+      }
+      when DOUBLE, CURRENCY, INTEGER, PERCENT {
+        return clean; // numeric
+      }
+      when else {
+        return quote(clean); // default: quote it
+      }
     }
+  }
 
-    if (Pattern.matches('\\d{4}-\\d{2}-\\d{2}', clean)) {
-      return clean; // likely a date
-    }
-
-    if (clean.toLowerCase() == 'true' || clean.toLowerCase() == 'false') {
-      return clean.toLowerCase();
-    }
-
-    if (isNumeric(clean)) {
-
-      return clean;
-    }
-
-    return '\'' + clean.replaceAll('\'', '\\\'') + '\'';
+  private static String quote(String input) {
+    return '\'' + input.replaceAll('\'', '\\\'') + '\'';
   }
 
   private static Boolean isNumeric(String input) {
     return Pattern.matches('^-?\\d+(\\.\\d+)?$', input);
-}
+  }
 }

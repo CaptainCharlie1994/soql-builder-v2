@@ -27,11 +27,6 @@
   width: 100%;
 }
 
-/* Add consistent padding inside the card body */
-/* .builder-wrapper lightning-card .slds-card__body {
-  padding: 1.5rem;
-} */
-
 /* Checkbox bottom-spacing */
 .builder-wrapper lightning-input[type="checkbox"] {
   margin-bottom: 1rem;
@@ -74,11 +69,25 @@
   overflow-x: auto;
 }
 
-.soql-preview{
-  color: #1b1b1b;
-  font-family: 'Fira Code', Consolas, Menlo, Monaco, monospace;
-  font-size: 0.95rem;
-  padding-left: 1rem;
+.soql-preview {
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  background-color: #f6f8fa;
+  padding: 0.75rem;
+  border-radius: 4px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border: 1px solid #e0e5ee;
+}
+
+.soql-preview-before-render {
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  background-color: #f6f8fa;
+  padding: 0.75rem;
+  border-radius: 4px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border: 1px solid #e0e5ee;
+  color: red;
 }
 
 .soql-preview-title{
@@ -138,6 +147,17 @@
   padding: .5rem;
 }
 
+.main-section-header {
+  background-color: #e5f3ff; 
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 1rem;
+  border: 1px solid #d8dde6;
+  border-bottom: none;
+  position: relative;
+  padding: .5rem;
+}
+
 .section-card {
   background-color: #f9f9f9; /* Light background for contrast */
   border: 1px solid #ddd;    /* Subtle border */
@@ -161,7 +181,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  margin-right: 20px;
+  
+
 }
 
 .action-button:hover {
@@ -300,3 +321,11 @@
   right: 0;
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.right-panel-content {
+  animation: fadeIn 0.3s ease-in-out;
+}

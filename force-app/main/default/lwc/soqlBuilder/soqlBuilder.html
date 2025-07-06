@@ -1,15 +1,13 @@
 <template>
+  <!--+++++++++ OVERALL CONTAINER +++++++++-->
   <div class="panel-container slds-grid">
-    <!-- LEFT PANEL -->
+    <!--+++++++++ LEFT PANEL +++++++++-->
     <div class={ui.leftPanelClass}>
       <div class="builder-layout">
-        <lightning-card
-          title="SOQL Builder"
-          icon-name="custom:custom63"
-          class="soql-card"
-        >
+        <div class="main-section-header">SOQL Builder</div>
           <div class="builder-wrapper">
             <template if:true={objectOptions.length}>
+              <!--+++++++++ INITIAL OBJECT SELECTOR +++++++++-->
               <div class="section-card">
                 <div class="slds-m-bottom_medium">
                   <lightning-input
@@ -27,7 +25,7 @@
                 ></lightning-combobox>
               </div>
             </template>
-
+            <!--+++++++++ INITIAL OBJECTS FIELD SELECTOR +++++++++-->
             <template if:true={dualListBoxReady}>
               <div class="section-card">
                 <h2 class="section-header">Field Selector</h2>
@@ -48,7 +46,7 @@
                 ></lightning-dual-listbox>
               </div>
             </template>
-
+            <!--+++++++++ PARENT SELECTOR +++++++++-->
             <template if:true={ui.shouldShowParentSection}>
               <div class="section-card">
                 <template if:true={ui.hasParentOptions}>
@@ -61,6 +59,7 @@
                   ></lightning-combobox>
                 </template>
                 <template if:true={selectedParent}>
+                  <!--+++++++++ PARENT FIELD SELECTOR +++++++++-->
                   <lightning-dual-listbox
                     name="parentFields"
                     source-label="Available"
@@ -72,7 +71,7 @@
                 </template>
               </div>
             </template>
-
+            <!--+++++++++ CHILD OBJECT SELECTOR +++++++++-->
             <template if:true={selectedObject}>
               <div class="section-card">
                 <h2 class="section-header">Child Selector</h2>
@@ -84,7 +83,7 @@
                   value={selectedRelationships}
                   onchange={handleRelationshipSelection}
                 ></lightning-dual-listbox>
-
+                <!--+++++++++ CHIELD FIELD SELECTOR +++++++++-->
                 <template if:true={ui.childFieldConfigs}>
                   <lightning-accordion
                     class="child-section"
@@ -119,7 +118,7 @@
                 </template>
               </div>
             </template>
-
+            <!--+++++++++ WHERE CLAUSE BUILDER +++++++++-->
             <template if:true={ui.showFieldSelector}>
               <div class="section-card">
                 <div class="slds-m-top_medium">
@@ -127,6 +126,7 @@
                   <div
                     class="slds-grid slds-grid_align-spread slds-m-bottom_small"
                   >
+                    <!--+++++++++ USEADVANCE BUTTON +++++++++-->
                     <lightning-button-icon
                       icon-name={whereToggleIcon}
                       alternative-text="Toggle Advanced Mode"
@@ -134,7 +134,7 @@
                       onclick={toggleWhereMode}
                     ></lightning-button-icon>
                   </div>
-
+                  <!--+++++++++ MANUAL WHERE CLAUSE BUILDER +++++++++-->
                   <template if:false={useAdvancedMode}>
                     <template
                       for:each={ui.filtersWithOperatorOptions}
@@ -190,7 +190,7 @@
                       ></lightning-button>
                     </div>
                   </template>
-
+                  <!--+++++++++ ADVANCED WHERE CLAUSE BUILDER +++++++++-->
                   <template if:true={useAdvancedMode}>
                     <lightning-textarea
                       label="Manual WHERE Clause"
@@ -210,12 +210,12 @@
               </div>
             </template>
           </div>
-        </lightning-card>
       </div>
     </div>
 
-    <!-- RIGHT PANEL -->
+    <!--+++++++++  RIGHT PANEL   +++++++++-->
     <div class={ui.rightPanelWrapperClass}>
+      <!--+++++++++  COLLAPSE/EXPAND RIGHT PANEL BUTTON +++++++++-->
       <div class={ui.toggleButtonClass}>
         <div class="toggle-button">
           <lightning-button-icon
@@ -230,63 +230,65 @@
         </div>
       </div>
       <div class={ui.rightPanelClass}>
-        <template if:true={isPanelOpen}>
-          <div class="query-panel-wrapper">
-            <div class="sticky">
-              <div class="query-panel">
-                <lightning-card
-                  title="SOQL Preview"
-                  class="soql-preview-title"
-                >
-                  <pre class="soql-preview">{soqlPreview}</pre>
-                </lightning-card>
-              </div>
-            </div>
-            <template if:true={queryResults}>
-              <div class="section-card">
-                <lightning-card title="Query Results" class="slds-m-top_large">
-                  <div class="scrollable-table-container">
-                    <lightning-datatable
-                      key-field="Id"
-                      data={ui.visibleResults}
-                      columns={tableColumns}
-                    ></lightning-datatable>
+        <div class="right-panel-content">
+          <template if:true={isPanelOpen}>
+            <div class="query-panel-wrapper">
+              <div class="sticky">
+                <!--+++++++++ SOQL PREVIEW WINDOW +++++++++-->
+                <div class="query-panel">
+                  <div class="section-card">
+                    <div class="main-section-header">SOQL Preview</div>
+                    <pre class="soql-preview">{ui.previewText}</pre>
                   </div>
-                  <template if:true={ui.showExportNotice}>
-                    <div
-                      class="slds-notify slds-notify_alert slds-theme_info slds-m-top_small"
-                      role="alert"
-                    >
-                      <lightning-icon
-                        icon-name="utility:info"
-                        alternative-text="Info"
-                        size="x-small"
-                        class="slds-m-right_x-small"
-                      ></lightning-icon>
-                      <span>
-                        Showing only the first 50 rows. For the full dataset,
-                        click
-                        <strong>Email CSV</strong>.
-                      </span>
-                    </div>
-                  </template>
-
-                  <lightning-button
-                    label="Run Query"
-                    title="Run SOQL Query"
-                    onclick={handleBuildQuery}
-                    class="action-button"
-                  ></lightning-button>
-                  <lightning-button
-                    label="Email CSV Results"
-                    onclick={handleExport}
-                    class="action-button"
-                  ></lightning-button>
-                </lightning-card>
+                </div>
               </div>
-            </template>
-          </div>
-        </template>
+              <template if:true={queryResults}>
+                <div class="section-card">
+                  <div class="main-section-header">Query Results</div>
+                    <!--+++++++++  EXPORT TABLE   +++++++++-->
+                    <div class="scrollable-table-container">
+                      <lightning-datatable
+                        key-field="Id"
+                        data={ui.visibleResults}
+                        columns={tableColumns}
+                      ></lightning-datatable>
+                    </div>
+                    <template if:true={ui.showExportNotice}>
+                      <div
+                        class="slds-notify slds-notify_alert slds-theme_info slds-m-top_small"
+                        role="alert"
+                      >
+                        <lightning-icon
+                          icon-name="utility:info"
+                          alternative-text="Info"
+                          size="x-small"
+                          class="slds-m-right_x-small"
+                        ></lightning-icon>
+                        <span>
+                          Showing only the first 50 rows. For the full dataset,
+                          click
+                          <strong>Email CSV</strong>.
+                        </span>
+                      </div>
+                    </template>
+                    <!--+++++++++ ACTION BUTTONS +++++++++-->
+                    <lightning-button
+                      label="Run Query"
+                      title="Run SOQL Query"
+                      onclick={handleBuildQuery}
+                      class="action-button"
+                    ></lightning-button>
+                    <lightning-button
+                      label="Email CSV Results"
+                      onclick={handleExport}
+                      class="action-button"
+                    ></lightning-button>
+                  
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
       </div>
     </div>
   </div>

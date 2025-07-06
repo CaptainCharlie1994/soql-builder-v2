@@ -15,14 +15,14 @@ export default class resultFlattener {
         },
         {}
       );
-
+      //-----------Function declarations -----------------
       const normalizeValue = (val) => {
         if (val === null || val === undefined) return "";
         if (typeof val !== "object") return val;
         if (typeof val.Name === "string") return val.Name;
         if (typeof val.Label === "string") return val.Label;
         if (typeof val.Id === "string") return val.Id;
-        if(typeof val === 'boolea') return val.toString();
+        if (typeof val === "boolea") return val.toString();
         if (Array.isArray(val)) return `[${val.length} items]`;
 
         const keys = Object.keys(val);
@@ -48,9 +48,9 @@ export default class resultFlattener {
       const isParentFieldReference = (key) =>
         selectedParentFields.some((pf) => pf.startsWith(`${key}.`));
 
+      //----------- Executed Logic -----------------------
       flattenedRows = data.map((record) => {
-        const row = {};
-
+        const row = {};        
         Object.entries(record).forEach(([key, value]) => {
           if (isSubquery(value)) {
             const relKey = key.toLowerCase();

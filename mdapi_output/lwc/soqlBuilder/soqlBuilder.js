@@ -202,7 +202,6 @@ export default class SoqlBuilder extends LightningElement {
   fetchChildRelationships() {
     getChildRelationships({ objectApiName: this.selectedObject })
       .then((result) => {
-        debugFormatter.log("Fetched child relationships raw", result);
         this.childRelationships = result.map((rel) => ({
           label: rel,
           value: rel

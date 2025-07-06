@@ -1,5 +1,8 @@
 export function computeUIValues(ctx) {
-  console.log("computeUIValues Fired");
+console.log('🧪 computeUIValues triggered');
+console.log('🔍 ctx.filters:', ctx.filters);
+console.log('🔍 ctx.selectedObject:', ctx.selectedObject);
+console.log('🔍 ctx.fieldOptions:', JSON.stringify(ctx.fieldOptions));
   return {
     panelToggleIcon: ctx.isPanelOpen ? "utility:chevrondown" : "utility:chevronup",
     panelToggleLabel: ctx.isPanelOpen ? "Collapse Results" : "Expand Results",
@@ -35,6 +38,7 @@ export function computeUIValues(ctx) {
     hasParentOptions: ctx.parentRelationshipOptions?.length > 0,
     openChildSections: ctx.selectedRelationships || [],
     shouldShowParentSection: ctx.selectedObject && (ctx.parentRelationshipOptions?.length > 0 || ctx.selectedParent),
-    shouldShowChildSection: ctx.selectedObject && ctx.childFieldConfigs
+    shouldShowChildSection: ctx.selectedObject && ctx.childFieldConfigs,
+    previewText: ctx.soqlPreview ? ctx.soqlPreview : "SOQL query generated will appear here...",
   };
 }
