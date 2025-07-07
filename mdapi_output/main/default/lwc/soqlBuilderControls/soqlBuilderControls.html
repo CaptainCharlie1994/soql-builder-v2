@@ -1,0 +1,39 @@
+<template>
+  <div class="slds-grid slds-gutters slds-wrap query-controls">
+    <!-- LIMIT Input -->
+    <div class="slds-col slds-size_1-of-3">
+      <lightning-input
+        type="number"
+        label="Limit"
+        name="limitInput"
+        min="1"
+        max="2000"
+        value={limit}
+        onchange={handleLimitChange}
+        class="limit-input"
+      ></lightning-input>
+    </div>
+
+    <!-- ORDER BY Dropdown -->
+    <div class="slds-col slds-size_1-of-3">
+      <lightning-combobox
+        label="Order By"
+        value={orderByField}
+        options={availableFields}
+        onchange={handleOrderByChange}
+        class="orderby-select"
+      ></lightning-combobox>
+    </div>
+
+    <!-- ORDER Direction -->
+    <div class="slds-col slds-size_1-of-3">
+      <lightning-combobox
+        label="Direction"
+        value={orderDirection}
+        options={directionOptions}
+        onchange={handleOrderDirectionChange}
+        class="direction-select"
+      ></lightning-combobox>
+    </div>
+  </div>
+</template>
