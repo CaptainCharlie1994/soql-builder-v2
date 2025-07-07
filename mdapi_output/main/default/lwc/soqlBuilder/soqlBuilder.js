@@ -323,7 +323,6 @@ export default class SoqlBuilder extends LightningElement {
     });
   }
 
-
   addParentFieldConfig(rel, fields) {
     const options = fields
       .map((f) => ({
@@ -668,7 +667,6 @@ export default class SoqlBuilder extends LightningElement {
           "error"
         );
       });
-    console.log("📦 Raw Apex result:", debugFormatter.stringify(data));
   }
 
   updatePreview() {
@@ -796,4 +794,6 @@ export default class SoqlBuilder extends LightningElement {
       return {};
     }
   }
+ 
+  
 }
