@@ -1,12 +1,12 @@
 export function computeUIValues(ctx) {
 
   return {
-    panelToggleIcon: ctx.isPanelOpen ? "utility:chevrondown" : "utility:chevronup",
+    panelToggleIcon: ctx.isPanelOpen ? "utility:chevronright" : "utility:chevronleft",
     panelToggleLabel: ctx.isPanelOpen ? "Collapse Results" : "Expand Results",
     toggleButtonClass: `toggle-button-container ${ctx.isPanelOpen ? "panel-open" : "panel-closed"}`,
     rightPanelWrapperClass: `right-panel-container-wrapper ${ctx.isPanelOpen ? "visible" : "hidden"}`,
     leftPanelClass: ctx.isPanelOpen ? "left-panel narrow" : "left-panel full",
-    rightPanelClass: ctx.isPanelOpen ? "right-panel slide-in" : "right-panel slide-out",
+    rightPanelWrapperClass: ctx.isPanelOpen ? 'right-panel-container-wrapper visible' : 'right-panel-container-wrapper hidden',
     showFieldSelector: ctx.selectedObject && ctx.mainFieldOptions.length > 0,
     filtersWithOperatorOptions: ctx.filters.map((f, index) => ({
       ...f,
@@ -45,5 +45,6 @@ export function computeUIValues(ctx) {
     openChildSections: ctx.selectedChildRels || [],
     openParentSections: ctx.selectedParentRels || [],
     previewText: ctx.soqlPreview ? ctx.soqlPreview : "SOQL query generated will appear here...",
+    advancedToggleLabel: ctx.useAdvancedMode ? 'Toggle Advanced' : 'Toggle Manual'
   };
 }

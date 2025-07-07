@@ -89,6 +89,7 @@ export default class SoqlBuilder extends LightningElement {
     includeNonObjects: false,
     dualListBoxReady: false,
     isPanelOpen: false,
+    showAllWhereFields: false,
 
     // 8) Query Results & Preview
     soqlPreview: null,
@@ -105,6 +106,9 @@ export default class SoqlBuilder extends LightningElement {
     console.log("✅ soqlBuilder component mounted");
     console.log("🚀 soqlBuilder connectedCallback fired");
   }
+  renderedCallback() {
+  console.log('✅ soqlBuilder rendered');
+}
 
   //Wired objects to invoke Apex Classes.
   @wire(getQueryableObjects)
@@ -492,6 +496,7 @@ export default class SoqlBuilder extends LightningElement {
 
     const updated = [...this.filters];
     const filter = { ...updated[index], [field]: value };
+    console.log("This is the filter current value: " + JSON.stringify(filter));
 
     // If changing the field, recalculate operators
     if (field === "field") {
@@ -500,12 +505,6 @@ export default class SoqlBuilder extends LightningElement {
         filter.operator = "="; // fallback
       }
     }
-    console.log(
-      "This.rawWhereClause: ",
-      JSON.stringify(this.rawWhereClause)
-        ? JSON.stringify(this.rawWhereClause)
-        : "PlaceHolder for RawWhereClause"
-    );
 
     updated[index] = filter;
     this.filters = updated;
@@ -600,7 +599,7 @@ export default class SoqlBuilder extends LightningElement {
       this.tableColumns = [];
       return;
     }
-    if(!this.isPanelOpen){
+    if (!this.isPanelOpen) {
       this.isPanelOpen = true;
     }
 
@@ -790,14 +789,86 @@ export default class SoqlBuilder extends LightningElement {
     this.isPanelOpen = !this.isPanelOpen;
   }
 
+  handleToggleWhereFieldScope(event) {
+    this.showAllWhereFields = event.target.checked;
+  }
+
   //------------------- UTILITY METHODS --------------------------
   get ui() {
-    try {
-      const values = computeUIValues(this);
-      return values;
-    } catch (error) {
-      console.error("❌ Error in ui getter:", JSON.stringify(error));
-      return {};
+  try {
+    const values = computeUIValues(this);
+    return values;
+  } catch (error) {
+    console.error("❌ Error in ui getter:", error?.message || error);
+    return {};
+  }
+}
+
+  get groupedWhereFieldOptions() {
+    const groups = [];
+
+    // Main object fields
+    const mainFields = (
+      this.showAllWhereFields
+        ? this.mainFieldOptions
+        : this.selectedMainFields.map((fieldName) => {
+            const match = this.mainFieldOptions.find(
+              (f) => f.value === fieldName
+            );
+            return match || { label: fieldName, value: fieldName };
+          })
+    ).map((f) => ({
+      label: `${f.label || f.value} (${f.value})`,
+      value: f.value
+    }));
+
+    if (mainFields.length) {
+      groups.push({
+        label: "Main Object Fields",
+        options: mainFields
+      });
     }
+
+    // Parent fields
+    const parentGroups = Object.entries(
+      this.showAllWhereFields
+        ? this.parentRelFieldOptions
+        : this.selectedParentRelFields
+    );
+
+    parentGroups.forEach(([rel, fields]) => {
+      const options = fields.map((f) => {
+        const fieldName = this.showAllWhereFields ? f.value : f;
+        const label = this.showAllWhereFields
+          ? f.label
+          : fieldName.split(".").pop();
+        return {
+          label: `${label} (${fieldName})`,
+          value: fieldName
+        };
+      });
+
+      if (options.length) {
+        groups.push({
+          label: `${rel} (Parent)`,
+          options
+        });
+      }
+    });
+    console.log(
+      "📦 Grouped WHERE field options:",
+      JSON.stringify(groups, null, 2)
+    );
+    return groups;
+  }
+
+  get flatWhereFieldOptions() {
+    const grouped = this.groupedWhereFieldOptions;
+    return grouped.flatMap((group) =>
+      group.options.map((opt) => ({
+        label: `${group.label} — ${opt.label}`,
+        value: opt.value
+      }))
+    );
   }
 }

@@ -142,37 +142,46 @@
           <!--+++++++++ WHERE CLAUSE BUILDER +++++++++-->
           <template if:true={ui.showFieldSelector}>
             <div class="section-card">
-              <div class="slds-m-top_medium">
+              <div class="slds-m-top_medium where-clause-container">
                 <h2 class="section-header">WHERE Clause</h2>
-                <div
-                  class="slds-grid slds-grid_align-spread slds-m-bottom_small"
-                >
-                  <!--+++++++++ USEADVANCE BUTTON +++++++++-->
-                  <lightning-button-icon
-                    icon-name={whereToggleIcon}
-                    alternative-text="Toggle Advanced Mode"
-                    title="Toggle WHERE Clause Mode"
-                    onclick={toggleWhereMode}
-                  ></lightning-button-icon>
+
+                <div class="useAdvanced-button-container">
+                  <div class="toggle-button">
+                    <lightning-button-icon
+                      icon-name={whereToggleIcon}
+                      alternative-text="Toggle Advanced Mode"
+                      title="Toggle WHERE Clause Mode"
+                      onclick={toggleWhereMode}
+                    ></lightning-button-icon>
+                    <span class="toggle-label">{ui.advancedToggleLabel}</span>
+                  </div>
                 </div>
-                <!--+++++++++ MANUAL WHERE CLAUSE BUILDER +++++++++-->
+
+                <!-- Manual WHERE Clause Builder -->
                 <template if:false={useAdvancedMode}>
                   <template
                     for:each={ui.filtersWithOperatorOptions}
                     for:item="filter"
                   >
-                    <div key={filter.id} class="filter-row">
-                      <div>
+                    <div
+                      key={filter.id}
+                      class="filter-row slds-grid slds-wrap slds-gutters slds-m-bottom_small"
+                    >
+                      <div
+                        class="filter-element slds-col slds-size_1-of-1 slds-medium-size_5-of-12"
+                      >
                         <lightning-combobox
                           label="Field"
                           name="field"
                           data-index={filter.index}
                           value={filter.field}
-                          options={mainFieldOptions}
+                          options={flatWhereFieldOptions}
                           onchange={handleFilterChange}
                         ></lightning-combobox>
                       </div>
-                      <div>
+                      <div
+                        class="filter-element slds-col slds-size_1-of-1 slds-medium-size_1-of-12"
+                      >
                         <lightning-combobox
                           label="Operator"
                           name="operator"
@@ -183,7 +192,9 @@
                           onchange={handleFilterChange}
                         ></lightning-combobox>
                       </div>
-                      <div>
+                      <div
+                        class="filter-element slds-col slds-size_1-of-1 slds-medium-size_5-of-12"
+                      >
                         <lightning-input
                           label="Value"
                           name="value"
@@ -192,7 +203,9 @@
                           onchange={handleFilterChange}
                         ></lightning-input>
                       </div>
-                      <div class="slds-align-bottom">
+                      <div
+                        class="filter-element slds-col slds-size_1-of-1 slds-medium-size_1-of-12 slds-align-middle"
+                      >
                         <lightning-button-icon
                           icon-name="utility:close"
                           alternative-text="Remove Filter"
@@ -203,6 +216,7 @@
                       </div>
                     </div>
                   </template>
+
                   <div class="slds-m-top_small slds-m-bottom_medium">
                     <lightning-button
                       label="Add Filter"
@@ -211,17 +225,21 @@
                     ></lightning-button>
                   </div>
                 </template>
-                <!--+++++++++ ADVANCED WHERE CLAUSE BUILDER +++++++++-->
+
+                <!-- Advanced WHERE Clause -->
                 <template if:true={useAdvancedMode}>
-                  <lightning-textarea
-                    label="Manual WHERE Clause"
-                    value={rawWhereClause}
-                    onchange={handleWhereInputChange}
-                    placeholder="e.g. Status = 'Open' AND CreatedDate > LAST_N_DAYS:30"
-                    class="slds-m-top_small"
-                  ></lightning-textarea>
+                  <div class="filter-element">
+                    <lightning-textarea
+                      label="Manual WHERE Clause"
+                      value={rawWhereClause}
+                      onchange={handleWhereInputChange}
+                      placeholder="e.g. Status = 'Open' AND CreatedDate > LAST_N_DAYS:30"
+                      class="slds-m-top_small"
+                    ></lightning-textarea>
+                  </div>
                 </template>
               </div>
+
               <c-soql-builder-controls
                 oncontrolsupdate={handleControlsUpdate}
                 limit={limit}
@@ -284,7 +302,6 @@
                     </div>
                   </template>
                   <!--+++++++++ ACTION BUTTONS +++++++++-->
-                  
                 </div>
               </template>
             </div>
@@ -296,21 +313,20 @@
 
   <!--+++++++++ SOQL PREVIEW WINDOW +++++++++-->
   <div class="query-panel">
-    <div class="section-card">
+    <div class="preview-section-card">
       <div class="main-section-header">SOQL Preview</div>
       <pre class="soql-preview">{ui.previewText}</pre>
       <lightning-button
-                    label="Run Query"
-                    title="Run SOQL Query"
-                    onclick={handleBuildQuery}
-                    class="action-button"
-                  ></lightning-button>
-                  <lightning-button
-                    label="Email CSV Results"
-                    onclick={handleExport}
-                    class="action-button"
-                  ></lightning-button>
-      
+        label="Run Query"
+        title="Run SOQL Query"
+        onclick={handleBuildQuery}
+        class="action-button"
+      ></lightning-button>
+      <lightning-button
+        label="Email CSV Results"
+        onclick={handleExport}
+        class="action-button"
+      ></lightning-button>
     </div>
   </div>
 </template>

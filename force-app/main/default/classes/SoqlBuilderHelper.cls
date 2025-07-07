@@ -229,42 +229,123 @@ public with sharing class SoqlBuilderHelper {
     String fieldName,
     Object value
   ) {
-    if (value == null)
+    System.debug('🔍 formatFilterValue called with:');
+    System.debug('• objectApiName: ' + objectApiName);
+    System.debug('• fieldName: ' + fieldName);
+    System.debug('• raw value: ' + value);
+
+    if (value == null) {
+      System.debug('⚠️ Value is null → returning null');
       return 'null';
+    }
 
     String clean = String.valueOf(value).trim();
-    if (clean.toLowerCase() == 'null')
+    System.debug('• Cleaned value: ' + clean);
+
+    if (clean.toLowerCase() == 'null') {
+      System.debug('⚠️ Value is string "null" → returning null');
       return 'null';
+    }
+
+    // Handle parent fields like CreatedBy.IsActive
+    if (fieldName.contains('.')) {
+      System.debug('🔁 Detected parent field reference');
+
+      List<String> parts = fieldName.split('\\.');
+      if (parts.size() != 2) {
+        System.debug('❌ Invalid nested field format → fallback to quote');
+        return quote(clean);
+      }
+
+      String parentRel = parts[0];
+      String nestedField = parts[1];
+      System.debug('• Parent relationship: ' + parentRel);
+      System.debug('• Nested field: ' + nestedField);
+
+      Schema.SObjectType baseType = Schema.getGlobalDescribe()
+        .get(objectApiName);
+      if (baseType == null) {
+        System.debug(
+          '❌ Could not resolve base object type → fallback to quote'
+        );
+        return quote(clean);
+      }
+
+      Schema.DescribeSObjectResult baseDesc = baseType.getDescribe();
+      // Try to find the field whose relationshipName matches the parentRel
+      Schema.SObjectField parentField;
+      for (Schema.SObjectField f : baseDesc.fields.getMap().values()) {
+        if (f.getDescribe().getRelationshipName() == parentRel) {
+          parentField = f;
+          break;
+        }
+      }
+      if (parentField == null) {
+        System.debug('❌ Could not resolve parent field: ' + parentRel);
+        return quote(clean);
+      }
+
+      List<Schema.SObjectType> refTypes = parentField.getDescribe()
+        .getReferenceTo();
+      if (refTypes.isEmpty()) {
+        System.debug('❌ No reference types found for parent field');
+        return quote(clean);
+      }
+
+      Schema.SObjectType parentType = refTypes[0];
+      System.debug(
+        '• Resolved parent object: ' + parentType.getDescribe().getName()
+      );
+
+      Schema.DescribeSObjectResult parentDesc = parentType.getDescribe();
+      Schema.SObjectField nested = parentDesc.fields.getMap().get(nestedField);
+      if (nested == null) {
+        System.debug('❌ Could not resolve nested field: ' + nestedField);
+        return quote(clean);
+      }
+
+      Schema.DisplayType nestedType = nested.getDescribe().getType();
+      System.debug('✅ Resolved nested field type: ' + nestedType);
+
+      return formatByType(nestedType, clean);
+    }
+
+    // Handle top-level fields
+    System.debug('🔁 Handling top-level field');
 
     Schema.SObjectType objType = Schema.getGlobalDescribe().get(objectApiName);
-
-    if (objType == null)
-      return quote(clean); // fallback
+    if (objType == null) {
+      System.debug('❌ Could not resolve object type → fallback to quote');
+      return quote(clean);
+    }
 
     Schema.DescribeSObjectResult objDesc = objType.getDescribe();
-    Map<String, Schema.SObjectField> fieldsMap = objDesc.fields.getMap();
-    System.debug('fieldsMap -> getMap() : '+fieldsMap);
-    Schema.SObjectField sfield = fieldsMap.get(fieldName);
-    System.debug('sFields -> fieldName : ' + fieldName);
-    if (sfield == null)
-      return quote(clean); // fallback
+    Schema.SObjectField sfield = objDesc.fields.getMap().get(fieldName);
+    if (sfield == null) {
+      System.debug('❌ Could not resolve field: ' + fieldName);
+      return quote(clean);
+    }
 
     Schema.DisplayType type = sfield.getDescribe().getType();
-    System.debug('type -> sField: ' + type);
+    System.debug('✅ Resolved field type: ' + type);
 
-    switch on type {
-      when DATE, DATETIME {
-        return clean; // no quotes
-      }
-      when BOOLEAN {
-        return clean.toLowerCase(); // true/false
-      }
-      when DOUBLE, CURRENCY, INTEGER, PERCENT {
-        return clean; // numeric
-      }
-      when else {
-        return quote(clean); // default: quote it
-      }
+    return formatByType(type, clean);
+  }
+
+  private static String formatByType(Schema.DisplayType type, String clean) {
+    if (type == Schema.DisplayType.BOOLEAN) {
+      return clean.toLowerCase(); // true/false
+    } else if (
+      type == Schema.DisplayType.DATE ||
+      type == Schema.DisplayType.DATETIME ||
+      type == Schema.DisplayType.DOUBLE ||
+      type == Schema.DisplayType.CURRENCY ||
+      type == Schema.DisplayType.INTEGER ||
+      type == Schema.DisplayType.PERCENT
+    ) {
+      return clean; // unquoted
+    } else {
+      return quote(clean); // default: quote it
     }
   }
 

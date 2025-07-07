@@ -48,14 +48,14 @@
   margin-bottom: 0.75rem;
 }
 
-/* Filter rows: grid layout with baseline alignment */
+/* Filter rows: grid layout with baseline alignment
 .builder-wrapper .filter-row {
   display: grid;
   grid-template-columns: 2fr 1fr 2fr auto;
   gap: 1rem;
   align-items: baseline;
   margin-bottom: 1rem;
-}
+} */
 
 
 /* Preview styling */
@@ -63,7 +63,7 @@
   padding: 1rem;
   border-radius: 4px;
   border: 1px solid #d8dde6;
-  background-color: #f9fafb;
+  background-color: #a9c2db;
   font-family: Consolas, Menlo, Monaco, monospace;
   white-space: pre-wrap;
   overflow-x: auto;
@@ -74,6 +74,7 @@
   background-color: #f6f8fa;
   padding: 0.75rem;
   border-radius: 4px;
+  border: black 1px solid;
   white-space: pre-wrap;
   word-break: break-word;
   border: 1px solid #e0e5ee;
@@ -147,6 +148,8 @@
   padding: .5rem;
 }
 
+
+
 .main-section-header {
   background-color: #e5f3ff; 
   border-radius: 4px;
@@ -160,6 +163,15 @@
 
 .section-card {
   background-color: #f9f9f9; /* Light background for contrast */
+  border: 1px solid #ddd;    /* Subtle border */
+  border-radius: 8px;        /* Rounded corners */
+  padding: 1rem;             /* Inner spacing */
+  margin-bottom: 1rem;       /* Space between cards */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Soft shadow for depth */
+}
+
+.preview-section-card {
+  background-color: #a9c2db; /* Light background for contrast */
   border: 1px solid #ddd;    /* Subtle border */
   border-radius: 8px;        /* Rounded corners */
   padding: 1rem;             /* Inner spacing */
@@ -225,6 +237,17 @@
   width: 50%;
 }
 
+.where-clause-container {
+  width: 100%;
+  min-width: 600px;
+  box-sizing: border-box;
+}
+
+.filter-row lightning-combobox,
+.filter-row lightning-input {
+  width: 100%;
+}
+
 .right-panel {
   position: relative;
   transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
@@ -252,6 +275,18 @@
   z-index: 1000;
   width: auto; /* Prevents full-width stretching */
   transition: left 0.3s ease-in-out;
+}
+
+.useAdvanced-button-container {
+  position: absolute;
+  z-index: 1000;
+  width: auto; /* Prevents full-width stretching */
+  transition: left 0.3s ease-in-out;
+  margin-top: 1.8rem;
+}
+
+.filter-element{
+  margin-top: 5rem;
 }
 
 .toggle-button {
