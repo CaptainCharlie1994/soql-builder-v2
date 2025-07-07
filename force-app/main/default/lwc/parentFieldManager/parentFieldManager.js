@@ -1,19 +1,16 @@
 export default class parentFieldManager {
-  static resolveParentObject(relationshipOptions = [], selectedValue = '') {
-    return relationshipOptions.find(opt => opt.value === selectedValue)?.referenceTo || '';
+  static resolveParentObject(relationshipOptions = [], selectedValue = "") {
+    return (
+      relationshipOptions.find((opt) => opt.value === selectedValue)
+        ?.referenceTo || ""
+    );
   }
 
-  static formatRelationshipOption(field, refLabel) {
+  static formatRelationshipOption(field) {
     return {
-      label: `${field.label} (${refLabel})`,
+      label: `${field.label} (${field.name})`,
       value: field.relationshipName,
       referenceTo: field.referenceTo
     };
-  }
-
-  static fetchFieldsForObject(apiName, fieldFetchCallback) {
-    if (typeof fieldFetchCallback === 'function') {
-      fieldFetchCallback(apiName);
-    }
   }
 }

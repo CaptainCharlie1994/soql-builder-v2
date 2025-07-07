@@ -88,7 +88,7 @@ export default class SoqlBuilder extends LightningElement {
     // 7) Misc Toggles
     includeNonObjects: false,
     dualListBoxReady: false,
-    isPanelOpen: true,
+    isPanelOpen: false,
 
     // 8) Query Results & Preview
     soqlPreview: null,
@@ -172,7 +172,10 @@ export default class SoqlBuilder extends LightningElement {
         // ── b) Main fields list ─────────────────────────────────────────
         const fieldOpts = fields
           .filter((f) => f?.name)
-          .map((f) => ({ label: f.label || f.name, value: f.name }))
+          .map((f) => ({
+            label: `${f.label || f.name} (${f.name})`,
+            value: f.name
+          }))
           .sort((a, b) =>
             a.label.localeCompare(b.label, undefined, { numeric: true })
           );
@@ -189,7 +192,7 @@ export default class SoqlBuilder extends LightningElement {
           )
           .map((f) => {
             const refLabel = (f.referenceTo || "Unknown").split(",").join(", ");
-            return parentFieldManager.formatRelationshipOption(f, refLabel);
+            return parentFieldManager.formatRelationshipOption(f);
           })
           .sort((a, b) =>
             a.label.localeCompare(b.label, undefined, { numeric: true })
@@ -326,7 +329,7 @@ export default class SoqlBuilder extends LightningElement {
   addParentFieldConfig(rel, fields) {
     const options = fields
       .map((f) => ({
-        label: `${f.name} (${f.type})`,
+        label: `${f.label || f.name} (${f.name})`,
         value: `${rel}.${f.name}`
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
@@ -431,7 +434,7 @@ export default class SoqlBuilder extends LightningElement {
   addChildFieldConfig(rel, fields) {
     const options = fields
       .map((f) => ({
-        label: `${f.name} (${f.type})`,
+        label: `${f.label || f.name} (${f.name})`,
         value: f.name
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
@@ -596,6 +599,9 @@ export default class SoqlBuilder extends LightningElement {
       this.queryResults = [];
       this.tableColumns = [];
       return;
+    }
+    if(!this.isPanelOpen){
+      this.isPanelOpen = true;
     }
 
     this.getSoqlQueryFromApex()
@@ -794,6 +800,4 @@ export default class SoqlBuilder extends LightningElement {
       return {};
     }
   }
- 
-  
 }
