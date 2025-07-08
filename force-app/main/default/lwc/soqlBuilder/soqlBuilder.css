@@ -584,3 +584,30 @@
   border-radius: 6px;
   width: fit-content;
 }
+
+:host(.dark-mode) {
+  --bg-color: #1e1e1e;
+  --text-color: #f0f0f0;
+  --card-bg: #2c2c2c;
+  --border-color: #444;
+  --accent-color: #3b82f6;
+}
+
+:host(.dark-mode) .builder-wrapper,
+:host(.dark-mode) .section-card,
+:host(.dark-mode) .collapsible-card {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border-color: var(--border-color);
+}
+
+:host(.dark-mode) .soql-preview {
+  background-color: #2d2d2d;
+  color: #f8f8f2;
+  border-color: var(--border-color);
+}
+
+:host(.dark-mode) .toggle-button {
+  background: linear-gradient(135deg, #374151, #1f2937);
+  color: #f0f0f0;
+}

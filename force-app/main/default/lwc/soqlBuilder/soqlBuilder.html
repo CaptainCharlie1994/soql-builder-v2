@@ -1,4 +1,14 @@
 <template>
+  <lightning-button
+    label="How-To Guide"
+    onclick={toggleHelpModal}
+  ></lightning-button>
+  <lightning-button
+    label="Toggle Dark Mode"
+    onclick={toggleDarkMode}
+    variant="neutral"
+  ></lightning-button>
+  <c-how-to-modal ontryexample={handleTryExample}></c-how-to-modal>
   <!--+++++++++ OVERALL CONTAINER +++++++++-->
   <div class="panel-container slds-grid">
     <!--+++++++++ LEFT PANEL +++++++++-->
@@ -134,6 +144,7 @@
 
               <template if:true={isChildOpen}>
                 <div class="collapsible-content">
+                  <!-- Dual-listbox for selecting child relationships -->
                   <lightning-dual-listbox
                     name="relatedLists"
                     source-label="Available"
@@ -143,19 +154,23 @@
                     onchange={handleRelationshipSelection}
                   ></lightning-dual-listbox>
 
-                  <!--+++++++++ CHILD FIELD SELECTOR +++++++++-->
-                  <template if:true={ui.childFieldConfigs}>
+                  <!-- Accordion for each selected child relationship -->
+                  <template if:true={ui.childWhereClauseConfigs}>
                     <lightning-accordion
                       class="child-section"
                       allow-multiple-sections-open
                       active-section-name={ui.openChildSections}
                     >
-                      <template for:each={ui.childFieldConfigs} for:item="cfg">
+                      <template
+                        for:each={ui.childWhereClauseConfigs}
+                        for:item="cfg"
+                      >
                         <lightning-accordion-section
                           key={cfg.rel}
                           name={cfg.rel}
                           label={cfg.label}
                         >
+                          <!-- Field search -->
                           <lightning-input
                             type="search"
                             data-list-type="child"
@@ -164,6 +179,8 @@
                             onchange={handleOptionsSearch}
                             class="slds-m-bottom_x-small"
                           ></lightning-input>
+
+                          <!-- Field selector -->
                           <lightning-dual-listbox
                             name={cfg.rel}
                             source-label="Available"
@@ -172,6 +189,22 @@
                             value={cfg.selected}
                             onchange={handleChildFieldRelChange}
                           ></lightning-dual-listbox>
+
+                          <!-- WHERE clause builder -->
+                          <div class="slds-m-top_medium where-clause-container">
+                            <c-where-clause-builder
+                              context={cfg.rel}
+                              filters={cfg.filters}
+                              available-fields={cfg.options}
+                              use-advanced-mode={cfg.useAdvancedMode}
+                              raw-where-clause={cfg.rawWhereClause}
+                              onfilterchange={handleChildFilterChange}
+                              onremovefilter={handleChildRemoveFilter}
+                              onaddfilter={handleChildAddFilter}
+                              ontogglemode={handleChildToggleMode}
+                              onrawchange={handleChildRawChange}
+                            ></c-where-clause-builder>
+                          </div>
                         </lightning-accordion-section>
                       </template>
                     </lightning-accordion>
@@ -198,102 +231,19 @@
               <template if:true={isWhereOpen}>
                 <div class="collapsible-content">
                   <div class="slds-m-top_medium where-clause-container">
-                    <!-- Toggle Button -->
-                    <div class="useAdvanced-button-container">
-                      <div class="toggle-button">
-                        <lightning-button-icon
-                          icon-name={whereToggleIcon}
-                          alternative-text="Toggle WHERE Clause Mode"
-                          title="Toggle WHERE Clause Mode"
-                          onclick={toggleWhereMode}
-                        ></lightning-button-icon>
-                        <span class="toggle-label"
-                          >{ui.advancedToggleLabel}</span
-                        >
-                      </div>
-                    </div>
-
                     <!-- Basic Mode -->
-                    <template if:false={useAdvancedMode}>
-                      <template
-                        for:each={ui.filtersWithOperatorOptions}
-                        for:item="filter"
-                      >
-                        <div
-                          key={filter.id}
-                          class="filter-row slds-grid slds-wrap slds-gutters slds-m-bottom_small"
-                        >
-                          <div
-                            class="filter-element slds-col slds-size_1-of-1 slds-medium-size_5-of-12"
-                          >
-                            <lightning-combobox
-                              label="Field"
-                              name="field"
-                              data-index={filter.index}
-                              value={filter.field}
-                              options={flatWhereFieldOptions}
-                              onchange={handleFilterChange}
-                            ></lightning-combobox>
-                          </div>
-                          <div
-                            class="filter-element slds-col slds-size_1-of-1 slds-medium-size_1-of-12"
-                          >
-                            <lightning-combobox
-                              label="Operator"
-                              name="operator"
-                              data-index={filter.index}
-                              value={filter.operator}
-                              options={filter.safeOperators}
-                              disabled={filter.isDisabled}
-                              onchange={handleFilterChange}
-                            ></lightning-combobox>
-                          </div>
-                          <div
-                            class="filter-element slds-col slds-size_1-of-1 slds-medium-size_5-of-12"
-                          >
-                            <lightning-input
-                              label="Value"
-                              name="value"
-                              data-index={filter.index}
-                              value={filter.value}
-                              onchange={handleFilterChange}
-                            ></lightning-input>
-                          </div>
-                          <div
-                            class="filter-element slds-col slds-size_1-of-1 slds-medium-size_1-of-12 slds-align-middle"
-                          >
-                            <lightning-button-icon
-                              icon-name="utility:close"
-                              alternative-text="Remove Filter"
-                              title="Remove Filter"
-                              data-index={filter.index}
-                              onclick={handleRemoveFilter}
-                            ></lightning-button-icon>
-                          </div>
-                        </div>
-                      </template>
 
-                      <div class="slds-m-top_small slds-m-bottom_medium">
-                        <lightning-button
-                          label="Add Filter"
-                          icon-name="utility:add"
-                          onclick={addFilter}
-                        ></lightning-button>
-                      </div>
-                    </template>
-
-                    <!-- Advanced Mode -->
-                    <template if:true={useAdvancedMode}>
-                      <div class="filter-element">
-                        <lightning-textarea
-                          label="Manual WHERE Clause"
-                          value={rawWhereClause}
-                          onchange={handleWhereInputChange}
-                          placeholder="e.g. Status = 'Open' AND CreatedDate > LAST_N_DAYS:30"
-                          class="slds-m-top_small"
-                        ></lightning-textarea>
-                      </div>
-                    </template>
+                    <c-where-clause-builder
+                      filters={filters}
+                      available-fields={flatWhereFieldOptions}
+                      use-advanced-mode={useAdvancedMode}
+                      raw-where-clause={rawWhereClause}
+                      onfilterchange={handleFilterChange}
+                      onremovefilter={handleRemoveFilter}
+                      onaddfilter={addFilter}
+                      ontogglemode={toggleWhereMode}
+                      onrawchange={handleWhereInputChange}
+                    ></c-where-clause-builder>
                   </div>
 
                   <!-- Controls (Limit, Order By, Direction) -->
@@ -314,7 +264,7 @@
     <!--+++++++++  RIGHT PANEL   +++++++++-->
     <div class={ui.rightPanelWrapperClass}>
       <!--+++++++++  COLLAPSE/EXPAND RIGHT PANEL BUTTON +++++++++-->
-      
+
       <div class={ui.toggleButtonClass}>
         <button class="toggle-button" onclick={togglePanel}>
           <lightning-icon

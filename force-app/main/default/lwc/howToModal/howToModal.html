@@ -1,0 +1,102 @@
+<template>
+  <template if:true={isOpen}>
+    <section role="dialog" class="slds-modal slds-fade-in-open">
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <h2 class="slds-text-heading_medium">SOQL Builder Guide</h2>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium">
+          <ol class="slds-list_ordered">
+            <li class="slds-m-bottom_medium">
+              <strong>🟢 Start Simple: Select a Field</strong>
+              <pre><code>SELECT Id FROM Account</code></pre>
+              <p>
+                This is like saying: <em>"Give me the ID of every Account."</em>
+              </p>
+            </li>
+
+            <li class="slds-m-bottom_medium">
+              <strong>🟢 Add More Fields</strong>
+              <pre><code>SELECT Id, Name, Industry FROM Account</code></pre>
+              <p>
+                Now you're saying:
+                <em>"Give me the ID, Name, and Industry of every Account."</em>
+              </p>
+            </li>
+
+            <li class="slds-m-bottom_medium">
+              <strong>Filter with WHERE</strong>
+              <pre><code>🟢 SELECT Name FROM Account WHERE Industry = 'Technology'</code></pre>
+              <p>
+                This means:
+                <em>"Only show Accounts in the Technology industry."</em>
+              </p>
+            </li>
+
+            <li class="slds-m-bottom_medium">
+              <strong>🟡 Use LIKE for Partial Matches</strong>
+              <pre><code>SELECT Name FROM Account WHERE Name LIKE 'Acme%'</code></pre>
+              <p>
+                Translation:
+                <em>"Find Accounts whose names start with 'Acme'."</em>
+              </p>
+            </li>
+
+            <li class="slds-m-bottom_medium">
+              <strong>🟡 Sort with ORDER BY</strong>
+              <pre><code>SELECT Name FROM Account ORDER BY CreatedDate DESC</code></pre>
+              <p>
+                You're saying: <em>"Show me Account names, newest first."</em>
+              </p>
+            </li>
+
+            <li class="slds-m-bottom_medium">
+              <strong>🟡 Limit the Results</strong>
+              <pre><code>SELECT Name FROM Account LIMIT 10</code></pre>
+              <p>This means: <em>"Just give me the first 10 Accounts."</em></p>
+            </li>
+
+            <li class="slds-m-bottom_medium">
+              <strong>🟡 Use Parent Relationships</strong>
+              <pre><code>SELECT Name, Owner.Name FROM Account</code></pre>
+              <p>
+                You're saying:
+                <em
+                  >"Give me the Account name and the name of the person who owns
+                  it."</em
+                >
+              </p>
+            </li>
+            <template if:true={showAdvanced}>
+              <li class="slds-m-bottom_medium">
+                <strong>Include Child Records (Subqueries)</strong>
+                <pre><code>🔴 SELECT Name, (SELECT LastName FROM Contacts) FROM Account</code></pre>
+                <p>
+                  This means:
+                  <em
+                    >"For each Account, show me its name and the last names of
+                    its Contacts."</em
+                  >
+                </p>
+              </li>
+
+              <li class="slds-m-bottom_medium">
+                <strong>Use NOT LIKE</strong>
+                <pre><code>🔴 SELECT Name FROM Account WHERE Name NOT LIKE '%Test'</code></pre>
+                <p><em>"Exclude accounts whose names end in 'Test'"</em></p>
+              </li>
+            </template>
+          </ol>
+        </div>
+        <footer class="slds-modal__footer">
+          <lightning-button
+            variant="neutral"
+            label="Close"
+            onclick={close}
+          ></lightning-button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+</template>

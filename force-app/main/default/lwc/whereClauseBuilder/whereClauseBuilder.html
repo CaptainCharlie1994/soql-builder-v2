@@ -1,0 +1,91 @@
+<template>
+  <div class="collapsible-card where-clause-card">
+    <div class="collapsible-header"></div>
+
+    <div class="collapsible-content">
+      <!-- Toggle Button -->
+      <div class="useAdvanced-toggle-wrapper">
+        <label class="toggle-label">
+          <span class="toggle-text">Toggle Advanced Mode</span>
+          <input
+            type="checkbox"
+            checked={useAdvancedMode}
+            onchange={toggleMode}
+            class="toggle-switch"
+          />
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <!-- Basic Mode -->
+      <template if:false={useAdvancedMode}>
+        <template for:each={filters} for:item="filter" for:index="index">
+          <div
+            key={filter.id}
+            class="filter-row slds-grid slds-wrap slds-gutters slds-m-bottom_small"
+          >
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_5-of-12">
+              <lightning-combobox
+                label="Field"
+                name="field"
+                data-index={index}
+                value={filter.field}
+                options={availableFields}
+                onchange={handleChange}
+              ></lightning-combobox>
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-12">
+              <lightning-combobox
+                label="Operator"
+                name="operator"
+                data-index={index}
+                value={filter.operator}
+                options={filter.validOperators}
+                onchange={handleChange}
+              ></lightning-combobox>
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_5-of-12">
+              <lightning-input
+                label="Value"
+                name="value"
+                data-index={index}
+                value={filter.value}
+                onchange={handleChange}
+              ></lightning-input>
+            </div>
+            <div
+              class="slds-col slds-size_1-of-1 slds-medium-size_1-of-12 slds-align-middle"
+            >
+              <lightning-button-icon
+                icon-name="utility:close"
+                alternative-text="Remove Filter"
+                title="Remove Filter"
+                data-index={index}
+                onclick={handleRemove}
+              ></lightning-button-icon>
+            </div>
+          </div>
+        </template>
+
+        <div class="slds-m-top_small slds-m-bottom_medium">
+          <lightning-button
+            label="Add Filter"
+            icon-name="utility:add"
+            onclick={addFilter}
+          ></lightning-button>
+        </div>
+      </template>
+
+      <!-- Advanced Mode -->
+      <template if:true={useAdvancedMode}>
+        <lightning-textarea
+          label="Manual WHERE Clause"
+          value={rawWhereClause}
+          onchange={handleRawChange}
+          placeholder="e.g. Status = 'Open' AND CreatedDate > LAST_N_DAYS:30"
+          class="slds-m-top_small"
+        ></lightning-textarea>
+      </template>
+    </div>
+  </div>
+</template>

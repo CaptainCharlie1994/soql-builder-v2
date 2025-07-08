@@ -2,11 +2,15 @@
 
 export function computeUIValues(ctx) {
   return {
-    panelToggleIcon: ctx.isPanelOpen ? 'utility:chevronright' : 'utility:chevronleft',
-    panelToggleLabel: ctx.isPanelOpen ? 'Collapse Results' : 'Expand Results',
-    toggleButtonClass: `toggle-button-container ${ctx.isPanelOpen ? 'panel-open' : 'panel-closed'}`,
-    rightPanelWrapperClass: ctx.isPanelOpen ? 'right-panel-container-wrapper visible' : 'right-panel-container-wrapper hidden',
-    leftPanelClass: ctx.isPanelOpen ? 'left-panel narrow' : 'left-panel full',
+    panelToggleIcon: ctx.isPanelOpen
+      ? "utility:chevronright"
+      : "utility:chevronleft",
+    panelToggleLabel: ctx.isPanelOpen ? "Collapse Results" : "Expand Results",
+    toggleButtonClass: `toggle-button-container ${ctx.isPanelOpen ? "panel-open" : "panel-closed"}`,
+    rightPanelWrapperClass: ctx.isPanelOpen
+      ? "right-panel-container-wrapper visible"
+      : "right-panel-container-wrapper hidden",
+    leftPanelClass: ctx.isPanelOpen ? "left-panel narrow" : "left-panel full",
     showFieldSelector: ctx.selectedObject && ctx.mainFieldOptions.length > 0,
     filtersWithOperatorOptions: ctx.filters.map((f, index) => ({
       ...f,
@@ -14,14 +18,18 @@ export function computeUIValues(ctx) {
       safeOperators: Array.isArray(f.validOperators)
         ? f.validOperators
         : [
-            { label: '=', value: '=' },
-            { label: '!=', value: '!=' }
+            { label: "=", value: "=" },
+            { label: "!=", value: "!=" }
           ],
       isDisabled: !f.field
     })),
     visibleResults: ctx.queryResults?.slice(0, 50) || [],
     showExportNotice: ctx.queryResults?.length > 50,
-    stringifiedTableHeaders: JSON.stringify(ctx.tableColumns?.map((c) => c.fieldName), null, 2),
+    stringifiedTableHeaders: JSON.stringify(
+      ctx.tableColumns?.map((c) => c.fieldName),
+      null,
+      2
+    ),
     childFieldConfigs: Object.keys(ctx.childRelFieldOptions).map((rel) => {
       const original = ctx.childRelFieldOptions[rel] || [];
       const filtered = ctx.filteredChildFieldOptions[rel];
@@ -32,6 +40,29 @@ export function computeUIValues(ctx) {
         selected: ctx.selectedChildRelFields[rel] || []
       };
     }),
+    childWhereClauseConfigs: Object.keys(ctx.childRelFieldOptions).map(
+      (rel) => {
+        const allOptions =
+          ctx.filteredChildFieldOptions[rel] ||
+          ctx.childRelFieldOptions[rel] ||
+          [];
+        const selected = ctx.selectedChildRelFields[rel] || [];
+
+        const selectedOptions = allOptions.filter((opt) =>
+          selected.includes(opt.value)
+        );
+
+        return {
+          rel,
+          label: `${rel} (expandable...)`,
+          options: selectedOptions, // 👈 Only show selected fields
+          selected,
+          filters: ctx.childFilters?.[rel] || [],
+          useAdvancedMode: ctx.childAdvancedMode?.[rel] || false,
+          rawWhereClause: ctx.childRawWhere?.[rel] || ""
+        };
+      }
+    ),
     parentFieldConfigs: Object.keys(ctx.parentRelFieldOptions).map((rel) => {
       const original = ctx.parentRelFieldOptions[rel] || [];
       const filtered = ctx.filteredParentRelFieldOptions[rel];
@@ -44,10 +75,20 @@ export function computeUIValues(ctx) {
     }),
     openChildSections: ctx.selectedChildRels || [],
     openParentSections: ctx.selectedParentRels || [],
-    previewText: ctx.soqlPreview ? ctx.soqlPreview : 'SOQL query generated will appear here...',
-    advancedToggleLabel: ctx.useAdvancedMode ? 'Toggle Advanced' : 'Toggle Manual',
-    isRunQueryDisabled: !ctx.soqlPreview || ctx.soqlPreview.trim() === '',
+    previewText: ctx.soqlPreview
+      ? ctx.soqlPreview
+      : "SOQL query generated will appear here...",
+    advancedToggleLabel: ctx.useAdvancedMode
+      ? "Toggle Advanced"
+      : "Toggle Manual",
+    isRunQueryDisabled: !ctx.soqlPreview || ctx.soqlPreview.trim() === "",
     isExportDisabled: !ctx.queryResults || ctx.queryResults.length === 0,
+    groupedWhereFieldOptions: getGroupedWhereFieldOptions(ctx),
+    flatWhereFieldOptions: getFlatWhereFieldOptions(ctx),
+
+    getChildFilters: (rel) => ctx.childFilters?.[rel] || [],
+    getChildAdvancedMode: (rel) => ctx.childAdvancedMode?.[rel] || false,
+    getChildRawWhere: (rel) => ctx.childRawWhere?.[rel] || ""
   };
 }
 
@@ -55,7 +96,7 @@ export function getGroupedWhereFieldOptions(ctx) {
   const groups = [];
 
   const mainFields = (
-    ctx.showAllWhereFields
+    ctx.showAllWhereFields || !ctx.selectedMainFields?.length
       ? ctx.mainFieldOptions
       : ctx.selectedMainFields.map((fieldName) => {
           const match = ctx.mainFieldOptions.find((f) => f.value === fieldName);
@@ -68,19 +109,23 @@ export function getGroupedWhereFieldOptions(ctx) {
 
   if (mainFields.length) {
     groups.push({
-      label: 'Main Object Fields',
+      label: "Main Object Fields",
       options: mainFields
     });
   }
 
   const parentGroups = Object.entries(
-    ctx.showAllWhereFields ? ctx.parentRelFieldOptions : ctx.selectedParentRelFields
+    ctx.showAllWhereFields
+      ? ctx.parentRelFieldOptions
+      : ctx.selectedParentRelFields
   );
 
   parentGroups.forEach(([rel, fields]) => {
     const options = fields.map((f) => {
       const fieldName = ctx.showAllWhereFields ? f.value : f;
-      const label = ctx.showAllWhereFields ? f.label : fieldName.split('.').pop();
+      const label = ctx.showAllWhereFields
+        ? f.label
+        : fieldName.split(".").pop();
       return {
         label: `${label} (${fieldName})`,
         value: fieldName

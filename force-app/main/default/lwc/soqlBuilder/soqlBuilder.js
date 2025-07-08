@@ -85,17 +85,12 @@ export default class SoqlBuilder extends LightningElement {
     selectedChildRelFields: {},
 
     // 5) WHERE Clause Filters
-    filters: [
-      {
-        id: "filter-0",
-        field: "",
-        operator: "=",
-        value: "",
-        validOperators: operatorResolver.getOperatorOptions("")
-      }
-    ],
+    filters: [createNewFilter()],
     useAdvancedMode: false,
     rawWhereClause: "",
+    childRawWhere: {},
+    childAdvancedMode: {},
+    childFilters: {},
 
     // 6) ORDER BY / LIMIT
     limit: 500,
@@ -111,6 +106,7 @@ export default class SoqlBuilder extends LightningElement {
     isChildOpen: false,
     isWhereOpen: false,
     isPreviewOpen: true,
+    isDarkMode: false,
 
     // 8) Query Results & Preview
     soqlPreview: null,
@@ -434,13 +430,29 @@ export default class SoqlBuilder extends LightningElement {
 
   // -----------------WHERE CLAUSE -------------------------------
 
-  handleFilterChange(event) {
-    const index = parseInt(event.currentTarget.dataset.index, 10);
-    const field = event.target.name;
-    const value = event.target.value;
-
-    this.filters = updateFilter(this.filters, index, field, value);
+  handleChildFilterChange(event) {
+    const { rel, filters } = event.detail;
+    this.childFilters = {
+      ...this.childFilters,
+      [rel]: filters
+    };
     this.debouncedUpdatePreview();
+  }
+
+  handleChildRawChange(event) {
+    const { rel, value } = event.detail;
+    this.childRawWhere = {
+      ...this.childRawWhere,
+      [rel]: value
+    };
+  }
+
+  handleChildToggleMode(event) {
+    const { rel, value } = event.detail;
+    this.childAdvancedMode = {
+      ...this.childAdvancedMode,
+      [rel]: value
+    };
   }
 
   handleRemoveFilter(event) {
@@ -679,6 +691,27 @@ export default class SoqlBuilder extends LightningElement {
     this.isPreviewOpen = !this.isPreviewOpen;
   }
 
+  toggleHelpModal() {
+    this.template.querySelector("c-how-to-modal").open();
+  }
+
+  toggleDarkMode() {
+    this.isDarkMode = !this.isDarkMode;
+    const host = this.template.host;
+    if (this.isDarkMode) {
+      host.classList.add("dark-mode");
+    } else {
+      host.classList.remove("dark-mode");
+    }
+  }
+
+  handleTryExample(event) {
+    const exampleSoql = event.detail;
+    this.useAdvancedMode = true;
+    this.rawWhereClause = exampleSoql;
+    this.debouncedUpdatePreview();
+  }
+
   //------------------- UTILITY METHODS --------------------------
   get ui() {
     try {
@@ -688,13 +721,5 @@ export default class SoqlBuilder extends LightningElement {
       console.error("❌ Error in ui getter:", error?.message || error);
       return {};
     }
-  }
-
-  get groupedWhereFieldOptions() {
-    return getGroupedWhereFieldOptions(this);
-  }
-
-  get flatWhereFieldOptions() {
-    return getFlatWhereFieldOptions(this);
   }
 }

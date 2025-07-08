@@ -8,8 +8,12 @@
  * @return {Array} filtered options
  */
 
-export function filterOptions(options = [], searchTerm = '', selectedValues = []) {
-  const term = (searchTerm || '').trim().toLowerCase();
+export function filterOptions(
+  options = [],
+  searchTerm = "",
+  selectedValues = []
+) {
+  const term = (searchTerm || "").trim().toLowerCase();
   const filtered = term
     ? options.filter(
         (opt) =>
@@ -17,15 +21,14 @@ export function filterOptions(options = [], searchTerm = '', selectedValues = []
           opt.value?.toLowerCase().includes(term)
       )
     : options;
-  console.log("Options :", JSON.stringify(options));
-  console.log("Search Term :", JSON.stringify(searchTerm));
-  console.log("SelectedValues: ", selectedValues);
- 
+
   const selectedSet = new Set(selectedValues);
-  console.log("SelectedSet: ", JSON.stringify(selectedSet));
+
   const preserved = options.filter((opt) => selectedSet.has(opt.value));
-  console.log("Preserved: ", JSON.stringify(preserved));
-  const merged = [...new Map([...preserved, ...filtered].map((o) => [o.value, o])).values()];
-  console.log("Merged: ", JSON.stringify(merged));
+
+  const merged = [
+    ...new Map([...preserved, ...filtered].map((o) => [o.value, o])).values()
+  ];
+
   return merged;
 }

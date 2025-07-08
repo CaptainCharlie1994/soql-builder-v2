@@ -2,6 +2,7 @@
 
 import getFieldsForObject from "@salesforce/apex/SoqlBuilderHelper.getFieldsForObject";
 import parentFieldManager from "c/parentFieldManager";
+import { createNewFilter } from "c/whereClauseManager";
 
 /**
  * Handles parent relationship selection changes.
@@ -97,6 +98,8 @@ export async function handleChildRelSelection({
   const fetchPromises = newSelection.map(async (rel) => {
     if (!childRelFieldOptions[rel]) {
       const sObjectName = relationshipToSObjectMap?.[rel] || rel;
+      console.log(`🔍 Resolving child relationship: ${rel}`);
+      console.log(`🧭 Mapped to sObject: ${sObjectName}`);
       console.log(`Fetching child fields for ${rel}`, sObjectName);
 
       try {
@@ -111,9 +114,22 @@ export async function handleChildRelSelection({
         setState((state) => {
           state.childRelFieldOptions[rel] = options;
           state.filteredChildFieldOptions[rel] = options;
+
+          // ✅ Ensure WHERE clause state is initialized here
+          if (!state.childFilters[rel]) {
+            state.childFilters[rel] = [createNewFilter()];
+          }
+          if (!(rel in state.childAdvancedMode)) {
+            state.childAdvancedMode[rel] = false;
+          }
+          if (!(rel in state.childRawWhere)) {
+            state.childRawWhere[rel] = "";
+          }
         });
       } catch (error) {
-        console.error(`Error fetching fields for ${rel}:`, error);
+        const message =
+          error?.body?.message || error?.message || JSON.stringify(error);
+        console.error(`❌ Error fetching fields for ${rel}: ${message}`);
       }
     }
   });
@@ -124,4 +140,16 @@ export async function handleChildRelSelection({
     state.selectedChildRels = newSelection;
     state.selectedChildRelFields = updatedChildRelFields;
   });
+
+  function ensureChildWhereClauseState(state, rel) {
+    if (!state.childFilters[rel]) {
+      state.childFilters[rel] = [createNewFilter()];
+    }
+    if (!(rel in state.childAdvancedMode)) {
+      state.childAdvancedMode[rel] = false;
+    }
+    if (!(rel in state.childRawWhere)) {
+      state.childRawWhere[rel] = "";
+    }
+  }
 }
