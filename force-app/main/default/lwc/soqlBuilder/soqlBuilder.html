@@ -165,47 +165,51 @@
                         for:each={ui.childWhereClauseConfigs}
                         for:item="cfg"
                       >
-                        <lightning-accordion-section
-                          key={cfg.rel}
-                          name={cfg.rel}
-                          label={cfg.label}
-                        >
-                          <!-- Field search -->
-                          <lightning-input
-                            type="search"
-                            data-list-type="child"
-                            data-options-key={cfg.rel}
-                            placeholder="Search fields…"
-                            onchange={handleOptionsSearch}
-                            class="slds-m-bottom_x-small"
-                          ></lightning-input>
-
-                          <!-- Field selector -->
-                          <lightning-dual-listbox
+                        <template if:true={cfg.options.length}>
+                          <lightning-accordion-section
+                            key={cfg.rel}
                             name={cfg.rel}
-                            source-label="Available"
-                            selected-label="Selected"
-                            options={cfg.options}
-                            value={cfg.selected}
-                            onchange={handleChildFieldRelChange}
-                          ></lightning-dual-listbox>
+                            label={cfg.label}
+                          >
+                            <!-- Field search -->
+                            <lightning-input
+                              type="search"
+                              data-list-type="child"
+                              data-options-key={cfg.rel}
+                              placeholder="Search fields…"
+                              onchange={handleOptionsSearch}
+                              class="slds-m-bottom_x-small"
+                            ></lightning-input>
 
-                          <!-- WHERE clause builder -->
-                          <div class="slds-m-top_medium where-clause-container">
-                            <c-where-clause-builder
-                              context={cfg.rel}
-                              filters={cfg.filters}
-                              available-fields={cfg.options}
-                              use-advanced-mode={cfg.useAdvancedMode}
-                              raw-where-clause={cfg.rawWhereClause}
-                              onfilterchange={handleChildFilterChange}
-                              onremovefilter={handleChildRemoveFilter}
-                              onaddfilter={handleChildAddFilter}
-                              ontogglemode={handleChildToggleMode}
-                              onrawchange={handleChildRawChange}
-                            ></c-where-clause-builder>
-                          </div>
-                        </lightning-accordion-section>
+                            <!-- Field selector -->
+                            <lightning-dual-listbox
+                              name={cfg.rel}
+                              source-label="Available"
+                              selected-label="Selected"
+                              options={cfg.allOptions}
+                              value={cfg.selected}
+                              onchange={handleChildFieldRelChange}
+                            ></lightning-dual-listbox>
+
+                            <!-- WHERE clause builder -->
+                            <div
+                              class="slds-m-top_medium where-clause-container"
+                            >
+                              <c-where-clause-builder
+                                context={cfg.rel}
+                                filters={cfg.filters}
+                                available-fields={cfg.options}
+                                use-advanced-mode={cfg.useAdvancedMode}
+                                raw-where-clause={cfg.rawWhereClause}
+                                onfilterchange={handleChildFilterChange}
+                                onremovefilter={handleChildRemoveFilter}
+                                onaddfilter={handleChildAddFilter}
+                                ontogglemode={handleChildToggleMode}
+                                onrawchange={handleChildRawChange}
+                              ></c-where-clause-builder>
+                            </div>
+                          </lightning-accordion-section>
+                        </template>
                       </template>
                     </lightning-accordion>
                   </template>

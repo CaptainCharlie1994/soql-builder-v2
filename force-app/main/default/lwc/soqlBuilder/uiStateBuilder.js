@@ -40,29 +40,33 @@ export function computeUIValues(ctx) {
         selected: ctx.selectedChildRelFields[rel] || []
       };
     }),
-    childWhereClauseConfigs: Object.keys(ctx.childRelFieldOptions).map(
-      (rel) => {
+    childWhereClauseConfigs: Object.keys(ctx.childRelFieldOptions)
+      .map((rel) => {
+        if (!ctx.childRelFieldOptions[rel]) return null;
+
         const allOptions =
           ctx.filteredChildFieldOptions[rel] ||
           ctx.childRelFieldOptions[rel] ||
           [];
+
         const selected = ctx.selectedChildRelFields[rel] || [];
 
         const selectedOptions = allOptions.filter((opt) =>
           selected.includes(opt.value)
         );
-
+        console.log("childWhereClauseConfigs define: ", JSON.stringify(allOptions));
         return {
           rel,
           label: `${rel} (expandable...)`,
-          options: selectedOptions, // 👈 Only show selected fields
+          allOptions, // 👈 used for the dual-listbox
+          options: selectedOptions, // 👈 used for the WHERE clause
           selected,
           filters: ctx.childFilters?.[rel] || [],
           useAdvancedMode: ctx.childAdvancedMode?.[rel] || false,
           rawWhereClause: ctx.childRawWhere?.[rel] || ""
         };
-      }
-    ),
+      })
+      .filter(Boolean),
     parentFieldConfigs: Object.keys(ctx.parentRelFieldOptions).map((rel) => {
       const original = ctx.parentRelFieldOptions[rel] || [];
       const filtered = ctx.filteredParentRelFieldOptions[rel];

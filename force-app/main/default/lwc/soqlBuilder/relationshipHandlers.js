@@ -110,21 +110,14 @@ export async function handleChildRelSelection({
         }));
 
         updatedChildRelFields[rel] = updatedChildRelFields[rel] || ["Id"];
-
+        console.log(`📌 IN HANDLECHILDRELSELECTION Selected child fields for ${rel}:`, JSON.stringify(updatedChildRelFields[rel]));
         setState((state) => {
           state.childRelFieldOptions[rel] = options;
           state.filteredChildFieldOptions[rel] = options;
+          console.log(`✅ IN HANDLECHILDRELSELECTION Loaded child fields for ${rel}:`, JSON.stringify(options));
 
           // ✅ Ensure WHERE clause state is initialized here
-          if (!state.childFilters[rel]) {
-            state.childFilters[rel] = [createNewFilter()];
-          }
-          if (!(rel in state.childAdvancedMode)) {
-            state.childAdvancedMode[rel] = false;
-          }
-          if (!(rel in state.childRawWhere)) {
-            state.childRawWhere[rel] = "";
-          }
+          ensureChildWhereClauseState(state, rel);
         });
       } catch (error) {
         const message =
@@ -139,6 +132,7 @@ export async function handleChildRelSelection({
   setState((state) => {
     state.selectedChildRels = newSelection;
     state.selectedChildRelFields = updatedChildRelFields;
+    console.log(`📌 IN SETSTATE Selected child fields for :`, JSON.stringify(updatedChildRelFields));
   });
 
   function ensureChildWhereClauseState(state, rel) {
