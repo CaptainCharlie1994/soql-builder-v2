@@ -136,16 +136,83 @@
 }
 
 
-.section-header {
-  background-color: #e5f3ff; 
-  border-radius: 4px;
-  font-weight: 600;
-  font-size: 1rem;
+.section-card {
+  background-color: #ffffff;
   border: 1px solid #d8dde6;
-  border-bottom: none;
-  position: relative;
-  margin-bottom: -1.0rem;
-  padding: .5rem;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  width: 100%;
+}
+
+.section-header {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1b1b1b;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-header::before {
+  content: '📦'; /* You can vary this per section */
+  font-size: 1.2rem;
+}
+
+.section-subtitle {
+  font-size: 1rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+  font-style: italic;
+}
+
+/* Base card style for all selectors */
+.selector-card {
+  background-color: #ffffff;
+  border: 1px solid #d8dde6;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s ease;
+}
+
+.selector-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Section subtitle (e.g. Step 1) */
+.section-subtitle {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+  font-style: italic;
+}
+
+/* Section header with icon */
+.section-header {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1b1b1b;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-header::before {
+  font-size: 1.2rem;
+}
+
+/* Specific icons for each section */
+.object-selector-card .section-header::before {
+  content: "🧱";
+}
+
+.field-selector-card .section-header::before {
+  content: "🧬";
 }
 
 
@@ -161,14 +228,6 @@
   padding: .5rem;
 }
 
-.section-card {
-  background-color: #f9f9f9; /* Light background for contrast */
-  border: 1px solid #ddd;    /* Subtle border */
-  border-radius: 8px;        /* Rounded corners */
-  padding: 1rem;             /* Inner spacing */
-  margin-bottom: 1rem;       /* Space between cards */
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Soft shadow for depth */
-}
 
 .preview-section-card {
   background-color: #a9c2db; /* Light background for contrast */
@@ -247,14 +306,31 @@
 .filter-row lightning-input {
   width: 100%;
 }
+.right-panel-container-wrapper {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  z-index: 2;
+  overflow: visible;
+  padding-right: 0;
+}
+.right-panel-container-wrapper.visible {
+  width: 50%;
+}
+
+.right-panel-container-wrapper.hidden {
+  width: 0px;
+  overflow: visible;
+  position: relative;
+}
 
 .right-panel {
-  position: relative;
-  transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
   width: 100%;
-  background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
-  box-shadow: -1px 0 4px rgba(0, 0, 0, 0.1);
-  z-index: 1;
+  padding: 0; /* Remove internal padding if any */
+  background: #f9fafb;
+  border-left: 1px solid #d8dde6;
+  box-shadow: -1px 0 4px rgba(0, 0, 0, 0.05);
 }
 
 .right-panel.slide-in {
@@ -273,66 +349,51 @@
   top: 50%;
   transform: translateY(-50%);
   z-index: 1000;
-  width: auto; /* Prevents full-width stretching */
-  transition: left 0.3s ease-in-out;
+  transition: right 0.3s ease-in-out;
+  background-color: transparent;
+  padding: 0;
 }
 
-.useAdvanced-button-container {
-  position: absolute;
-  z-index: 1000;
-  width: auto; /* Prevents full-width stretching */
-  transition: left 0.3s ease-in-out;
-  margin-top: 1.8rem;
+.toggle-button-container.panel-open {
+  right: 100%;
 }
 
-.filter-element{
-  margin-top: 5rem;
+.toggle-button-container.panel-closed {
+  right: 0;
 }
 
 .toggle-button {
   display: flex;
   align-items: center;
-  background: #ffffff;
-  border: 1px solid #d8dde6;
-  border-radius: 4px 0 0 4px;
-  padding: 0.5rem 0.75rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  transition: background 0.2s ease, box-shadow 0.2s ease;
-  z-index: 1000;
+  background: linear-gradient(135deg, #d0e3f5, #b7cde8);
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem 0 0 0.5rem;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
 }
 
 .toggle-button:hover {
-  background: #f4f6f9;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, #4338ca, #2563eb);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 .toggle-icon {
   margin-right: 0.5rem;
+  color: #fff;
 }
 
 .toggle-label {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #1b1b1b;
+  color: #fff;
   white-space: nowrap;
-}
-.right-panel-container-wrapper {
-  position: relative;
-  display: flex;
-  width: 50%;
-  height: 100vh;
-  z-index: 2;
-  overflow: visible;
-}
-.right-panel-container-wrapper.visible {
-  width: 50%;
+  color: black;
 }
 
-.right-panel-container-wrapper.hidden {
-  width: 0px;
-  overflow: visible;
-  position: relative;
-}
 
 
 /* Toggle button always positioned relative to the container */
@@ -364,6 +425,13 @@
 .right-panel-content {
   animation: fadeIn 0.3s ease-in-out;
 }
+.query-results-panel-wrapper {
+  width: 100%;
+  max-width: 1200;
+  padding: 0; /* Remove padding here */
+  margin: 0;
+  box-sizing: border-box;
+}
 
 .query-panel{
   position:sticky;
@@ -371,4 +439,148 @@
   width: 100%;
   z-index: 1000;
   background-color: #ffffff35;
+}
+
+.collapsible-card {
+  background-color: #ffffff;
+  border: 1px solid #d8dde6;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  background-color: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.collapsible-header:hover {
+  background-color: #e5e7eb;
+}
+
+.collapsible-content {
+  overflow: hidden;
+  padding: 1.5rem;
+  animation: fadeIn 0.3s ease-in-out;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+.section-subtitle {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+  font-style: italic;
+}
+
+.section-header {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1b1b1b;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.parent-selector-card .section-header::before {
+  content: "🧩";
+  font-size: 1.2rem;
+}
+
+.collapse-icon {
+  transition: transform 0.3s ease;
+}
+
+:host([data-parent-open="true"]) .collapse-icon {
+  transform: rotate(180deg);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.child-selector-card .section-header::before {
+  content: "👶";
+  font-size: 1.2rem;
+}
+
+.where-clause-card .section-header::before {
+  content: "🔍";
+  font-size: 1.2rem;
+}
+
+.soql-preview-card .section-header::before {
+  content: "🧾";
+  font-size: 1.2rem;
+}
+
+.collapsible-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding: 0;
+}
+
+.preview-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.preview-button {
+  --slds-c-button-brand-color-background: #4f46e5;
+  --slds-c-button-brand-color-background-hover: #4338ca;
+  --slds-c-button-brand-color-border: #4f46e5;
+  --slds-c-button-brand-color-border-hover: #4338ca;
+  --slds-c-button-brand-color-text: #ffffff;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.preview-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.preview-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.soql-preview-sticky {
+  position: sticky;
+  bottom: 0;
+  z-index: 1000;
+  background-color: #f9fafb;
+  padding: 1rem;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.05);
+  border-top: 1px solid #e0e5ee;
+}
+
+
+
+:host([data-preview-open="false"]) .collapsible-content {
+  max-height: 0;
+  opacity: 0;
+  padding: 0;
+}
+
+.useAdvanced-button-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: #f3f4f6;
+  border: 1px solid #d8dde6;
+  border-radius: 6px;
+  width: fit-content;
 }

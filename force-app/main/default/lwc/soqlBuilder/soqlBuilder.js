@@ -1,20 +1,37 @@
 import { LightningElement, track, wire } from "lwc";
 import getQueryableObjects from "@salesforce/apex/SoqlBuilderHelper.getQueryableObjects";
 import getFieldsForObject from "@salesforce/apex/SoqlBuilderHelper.getFieldsForObject";
-import runQuery from "@salesforce/apex/SoqlBuilderHelper.runQuery";
 import getChildRelationships from "@salesforce/apex/SoqlBuilderHelper.getChildRelationships";
 import getSoqlPreview from "@salesforce/apex/SoqlBuilderHelper.getSoqlPreview";
 import getChildObjectMappings from "@salesforce/apex/relationshipResolver.getChildObjectMappings";
-import emailCsv from "@salesforce/apex/exportController.emailCsv";
+import { showToast } from "./toastUtils";
 
 //Imports of Modularised code.
-import debugFormatter from "c/debugFormatter";
+
 import operatorResolver from "c/operatorResolver";
 import parentFieldManager from "c/parentFieldManager";
-import resultFlattener from "c/resultFlattener";
 import { filterOptions } from "c/listFilterUtils";
 import { debounce } from "c/debounce";
-import { computeUIValues } from "./soqlBuilderGetters";
+import {
+  computeUIValues,
+  getGroupedWhereFieldOptions,
+  getFlatWhereFieldOptions,
+  resetUIState
+} from "./uiStateBuilder";
+import {
+  createNewFilter,
+  updateFilter,
+  removeFilter
+} from "c/whereClauseManager";
+import {
+  handleParentRelSelectionHelper,
+  handleChildRelSelection
+} from "./relationshipHandlers";
+import {
+  buildPreview,
+  buildAndRunQuery,
+  exportQueryResults
+} from "./queryRunner";
 
 //Import Salesforce Utility
 import { getRecord } from "lightning/uiRecordApi";
@@ -90,6 +107,10 @@ export default class SoqlBuilder extends LightningElement {
     dualListBoxReady: false,
     isPanelOpen: false,
     showAllWhereFields: false,
+    isParentOpen: false,
+    isChildOpen: false,
+    isWhereOpen: false,
+    isPreviewOpen: true,
 
     // 8) Query Results & Preview
     soqlPreview: null,
@@ -107,8 +128,8 @@ export default class SoqlBuilder extends LightningElement {
     console.log("🚀 soqlBuilder connectedCallback fired");
   }
   renderedCallback() {
-  console.log('✅ soqlBuilder rendered');
-}
+    console.log("✅ soqlBuilder rendered");
+  }
 
   //Wired objects to invoke Apex Classes.
   @wire(getQueryableObjects)
@@ -136,18 +157,10 @@ export default class SoqlBuilder extends LightningElement {
     this.selectedObject = event.detail.value;
 
     // Reset UI state
-    this.dualListBoxReady = false;
-    this.mainFieldOptions = [];
-    this.filteredFieldOptions = [];
-    this.selectedMainFields = [];
-    this.parentRelOptions = [];
-    this.filteredParentRelOptions = [];
-    this.selectedParentRels = "";
-    this.childRelOptions = [];
-    this.selectedChildRels = [];
-    this.childRelFieldOptions = {};
-    this.selectedChildRelFields = {};
-    this.selectedParentRelFields = {};
+    console.log("🔁 Resetting UI state...");
+    resetUIState(this.state);
+    console.log("State after reset", this.state);
+    console.log("");
 
     if (!this.selectedObject) {
       console.warn("No object selected—skipping field fetch.");
@@ -212,19 +225,6 @@ export default class SoqlBuilder extends LightningElement {
         this.selectedParentRels = [];
         this.selectedParentRelFields = [];
 
-        console.log(
-          "📦 parentRelOptions:",
-          JSON.stringify(this.parentRelOptions)
-        );
-        console.log(
-          "📦 filteredParentRelOptions:",
-          JSON.stringify(this.filteredParentRelOptions)
-        );
-        console.log(
-          "📦 selectedParentRels:",
-          JSON.stringify(this.selectedParentRels)
-        );
-
         // d) Ready & follow‐ons
         this.dualListBoxReady = true;
         this.debouncedUpdatePreview();
@@ -272,41 +272,16 @@ export default class SoqlBuilder extends LightningElement {
 
   // --------------- PARENT SELECTION --------------------
   handleParentRelSelection(event) {
-    const previousSelectedParentRels = this.selectedParentRels;
     const newSelection = event.detail.value;
+    const previousSelection = this.selectedParentRels;
 
-    // Remove deselected Parent Objects
-    const removed = previousSelectedParentRels.filter(
-      (rel) => !newSelection.includes(rel)
-    );
-    removed.forEach((rel) => {
-      delete this.parentRelFieldOptions[rel];
-      delete this.filteredParentRelFieldOptions[rel];
-      delete this.selectedParentRelFields[rel];
-    });
-
-    // Update selection
-    this.selectedParentRels = newSelection;
-
-    // Fetch fields for newly added relationships
-    const fetchPromises = newSelection.map((rel) => {
-      const parentObj = parentFieldManager.resolveParentObject(
-        this.parentRelOptions,
-        rel
-      );
-      if (!parentObj) {
-        console.warn(`⚠️ Could not resolve parent object for: ${rel}`);
-        return Promise.resolve();
-      }
-
-      return getFieldsForObject({ objectApiName: parentObj })
-        .then((fields) => this.addParentFieldConfig(rel, fields))
-        .catch((error) =>
-          console.error(`Error fetching parent fields for ${rel}`, error)
-        );
-    });
-
-    Promise.all(fetchPromises).then(() => {
+    handleParentRelSelectionHelper({
+      newSelection,
+      previousSelection,
+      parentRelOptions: this.parentRelOptions,
+      selectedParentRelFields: this.selectedParentRelFields,
+      setState: (updater) => updater(this.state)
+    }).then(() => {
       this.debouncedUpdatePreview();
     });
   }
@@ -314,11 +289,7 @@ export default class SoqlBuilder extends LightningElement {
   handleParentRelFieldChange(event) {
     const rel = event.target.name;
     const selected = event.detail.value;
-    console.log(
-      "this.selectedParentFields: ",
-      JSON.stringify(this.selectParentFields)
-    );
-    console.log("selected: ", JSON.stringify(selected));
+    console.log("handeParentRelFieldChange -> selected: ", selected);
 
     this.selectedParentRelFields = {
       ...this.selectedParentRelFields,
@@ -331,12 +302,7 @@ export default class SoqlBuilder extends LightningElement {
   }
 
   addParentFieldConfig(rel, fields) {
-    const options = fields
-      .map((f) => ({
-        label: `${f.label || f.name} (${f.name})`,
-        value: `${rel}.${f.name}`
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label));
+    const options = buildFieldOptions(fields, rel);
 
     const selected = this.selectParentRelFields?.[rel] || [`${rel}.Id`];
 
@@ -361,47 +327,16 @@ export default class SoqlBuilder extends LightningElement {
   // ----------------- CHILD SELECTION --------------------
   handleRelationshipSelection(event) {
     const newSelection = event.detail.value;
+    const previousSelection = this.selectedChildRels;
 
-    // Remove deselected relationships
-    const removed = this.selectedChildRels.filter(
-      (r) => !newSelection.includes(r)
-    );
-    removed.forEach((rel) => {
-      delete this.childRelFieldOptions[rel];
-      this.selectedChildRelFields = {
-        ...this.selectedChildRelFields,
-        [rel]: ["Id"]
-      };
-    });
-
-    removed.forEach((rel) => {
-      delete this.parentRelFieldOptions[rel];
-      this.selectedParentRelFields = {
-        ...this.selectedParentRelFields,
-        [rel]: ["Id"]
-      };
-    });
-
-    this.selectedChildRels = newSelection;
-
-    // Collect promises for any new relationships that need field fetching
-    const fetchPromises = newSelection.map((rel) => {
-      if (!this.childRelFieldOptions[rel]) {
-        const sObjectName = this.relationshipToSObjectMap?.[rel] || rel;
-        debugFormatter.log(`Fetching child fields for ${rel}`, sObjectName);
-        return getFieldsForObject({ objectApiName: sObjectName })
-          .then((fields) => {
-            this.addChildFieldConfig(rel, fields);
-          })
-          .catch((error) =>
-            console.error(`Error fetching fields for ${rel}:`, error)
-          );
-      }
-      return Promise.resolve().then(() => this.updatePreview()); // Already loaded
-    });
-
-    // ✅ Wait for all fetches to complete before updating preview
-    Promise.all(fetchPromises).then(() => {
+    handleChildRelSelection({
+      newSelection,
+      previousSelection,
+      relationshipToSObjectMap: this.relationshipToSObjectMap,
+      childRelFieldOptions: this.childRelFieldOptions,
+      selectedChildRelFields: this.selectedChildRelFields,
+      setState: (updater) => updater(this.state)
+    }).then(() => {
       this.debouncedUpdatePreview();
     });
   }
@@ -414,7 +349,6 @@ export default class SoqlBuilder extends LightningElement {
       ...this.selectedChildRelFields,
       [rel]: selected
     };
-    console.log("Child fields for", rel, ":", this.selectedChildRelFields[rel]);
     //Add a promise resolve to stop this being called before the render tick.
     Promise.resolve().then(() => {
       this.debouncedUpdatePreview();
@@ -431,17 +365,12 @@ export default class SoqlBuilder extends LightningElement {
       })
       .catch((error) => {
         console.error("Error fetching child relationships:", error);
-        debugFormatter.log("❌ Error details", error);
+        console.log("❌ Error details", error);
       });
   }
 
   addChildFieldConfig(rel, fields) {
-    const options = fields
-      .map((f) => ({
-        label: `${f.label || f.name} (${f.name})`,
-        value: f.name
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label));
+    const options = buildFieldOptions(fields);
 
     const selected = this.selectedChildRelFields?.[rel] || ["Id"];
 
@@ -471,18 +400,34 @@ export default class SoqlBuilder extends LightningElement {
     const term = event.target.value;
 
     if (listType === "main") {
-      this.filteredFieldOptions = filterOptions(this.mainFieldOptions, term);
-    } else if (listType === "parentField") {
-      this.filteredParentRelFieldOptions = filterOptions(
-        this.parentRelFieldOptions,
-        term
+      this.filteredFieldOptions = filterOptions(
+        this.mainFieldOptions,
+        term,
+        this.selectedMainFields
       );
+    } else if (listType === "parentField") {
+      const rel = event.target.dataset.optionsKey; //Picks the accordian related (or created in a way) by selecting a specific object
+      const original = this.parentRelFieldOptions[rel] || []; //Get all the fields related to THAT accordian
+      const selected = this.selectedParentRelFields?.[rel] || []; // get all the fields that are currently selected
+
+      this.filteredParentRelFieldOptions = {
+        ...this.filteredParentRelFieldOptions,
+        [rel]: filterOptions(original, term, selected)
+      };
     } else if (listType === "child") {
+      console.log(
+        "These are the current Child Relationship Field Options",
+        JSON.stringify(this.childRelFieldOptions)
+      );
       const original =
         this.childRelFieldOptions[event.target.dataset.optionsKey] || [];
       this.filteredChildFieldOptions = {
         ...this.filteredChildFieldOptions,
-        [event.target.dataset.optionsKey]: filterOptions(original, term)
+        [event.target.dataset.optionsKey]: filterOptions(
+          original,
+          term,
+          this.selectedChildRelFields
+        )
       };
     }
   }
@@ -494,27 +439,13 @@ export default class SoqlBuilder extends LightningElement {
     const field = event.target.name;
     const value = event.target.value;
 
-    const updated = [...this.filters];
-    const filter = { ...updated[index], [field]: value };
-    console.log("This is the filter current value: " + JSON.stringify(filter));
-
-    // If changing the field, recalculate operators
-    if (field === "field") {
-      filter.validOperators = operatorResolver.getOperatorOptions(filter.field);
-      if (!filter.operator) {
-        filter.operator = "="; // fallback
-      }
-    }
-
-    updated[index] = filter;
-    this.filters = updated;
-    console.log("This.filters: " + JSON.stringify(this.filters));
+    this.filters = updateFilter(this.filters, index, field, value);
     this.debouncedUpdatePreview();
   }
 
   handleRemoveFilter(event) {
     const index = parseInt(event.currentTarget.dataset.index, 10);
-    this.filters = this.filters.filter((_, i) => i !== index);
+    this.filters = removeFilter(this.filters, index);
     this.debouncedUpdatePreview();
   }
 
@@ -537,15 +468,7 @@ export default class SoqlBuilder extends LightningElement {
   }
 
   addFilter() {
-    const defaultField = "";
-    const newFilter = {
-      id: `filter-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
-      field: defaultField,
-      operator: "=",
-      value: "",
-      validOperators: operatorResolver.getOperatorOptions("")
-    };
-    this.filters = [...this.filters, newFilter];
+    this.filters = [...this.filters, createNewFilter()];
   }
 
   filterObjectList() {
@@ -599,46 +522,20 @@ export default class SoqlBuilder extends LightningElement {
       this.tableColumns = [];
       return;
     }
+
     if (!this.isPanelOpen) {
       this.isPanelOpen = true;
     }
 
-    this.getSoqlQueryFromApex()
-      .then((fullQuery) => {
-        this.soqlPreview = fullQuery;
-        return runQuery({ soql: fullQuery });
-      })
-      .then((data) => {
-        console.log(
-          "✅ handleBuildQuery-> getSoqlQueryFromApex().then()-> Query results received:",
-          JSON.stringify(data, null, 2)
-        );
-        this.rawResult = data;
-        //Persist and pass on the header order of the query
-        const fieldOrder = [
-          ...this.selectedMainFields,
-          ...Object.values(this.selectedParentRelFields || {}).flat(),
-          ...Object.entries(this.selectedChildRelFields || {}).flatMap(
-            ([rel, fields]) =>
-              Array.from({ length: 5 }, (_, i) =>
-                fields.map((f) => `${rel}_${i + 1}_${f}`)
-              ).flat()
-          )
-        ];
-
-        const { rows, headers, childOverflowDetected } =
-          resultFlattener.flattenResults(
-            data,
-            this.selectedParentRelFields,
-            this.selectedChildRelFields,
-            fieldOrder
-          );
+    buildAndRunQuery(this.state)
+      .then(({ soql, rawResult, rows, headers, childOverflowDetected }) => {
+        this.soqlPreview = soql;
+        this.rawResult = rawResult;
 
         if (!Array.isArray(rows)) {
-          console.error("❌ Flattened result is invalid:", { rows, headers });
           this.queryResults = [];
           this.tableColumns = [];
-          this.showToast("Error", "Failed to process query results.", "error");
+          showToast(this, "Error", "Failed to process query results.", "error");
           return;
         }
 
@@ -649,7 +546,8 @@ export default class SoqlBuilder extends LightningElement {
         }));
 
         if (rows.length === 0) {
-          this.showToast(
+          showToast(
+            this,
             "No Results",
             "This query returned 0 records.",
             "info"
@@ -659,13 +557,11 @@ export default class SoqlBuilder extends LightningElement {
         }
       })
       .catch((error) => {
-        console.error(
-          "❌ runQuery failed:",
-          error?.body?.message || error.message || error
-        );
+        console.error("❌ runQuery failed:", error);
         this.queryResults = [];
         this.tableColumns = [];
-        this.showToast(
+        showToast(
+          this,
           "SOQL Error",
           error?.body?.message ||
             "An error occurred while executing the query.",
@@ -680,14 +576,9 @@ export default class SoqlBuilder extends LightningElement {
       return;
     }
 
-    this.getSoqlQueryFromApex()
-      .then((soql) => {
-        this.soqlPreview = soql;
-      })
-      .catch((error) => {
-        console.error("❌ Failed to build SOQL preview:", error);
-        this.soqlPreview = "Error building query";
-      });
+    buildPreview(this.state).then((soql) => {
+      this.soqlPreview = soql;
+    });
   }
 
   getSoqlQueryFromApex() {
@@ -721,52 +612,31 @@ export default class SoqlBuilder extends LightningElement {
 
   async handleExport() {
     if (!this.queryResults || this.queryResults.length === 0) {
-      this.showToast("Warning", "No data to export.", "warning");
+      showToast(this, "Warning", "No data to export.", "warning");
       return;
     }
 
-    this.showToast("info", "Preparing CSV for export...", "info");
+    showToast(this, "info", "Preparing CSV for export...", "info");
 
     try {
-      const fieldOrder = [
-        ...this.selectedMainFields,
-        ...Object.values(this.selectedParentRelFields || {}).flat(),
-        ...Object.entries(this.selectedChildRelFields || {}).flatMap(
-          ([rel, fields]) =>
-            Array.from({ length: 5 }, (_, i) =>
-              fields.map((f) => `${rel}_${i + 1}_${f}`)
-            ).flat()
-        )
-      ];
-
-      const { rows, headers } = resultFlattener.flattenResults(
+      const result = await exportQueryResults(
+        this.state,
         this.rawResult,
-        this.selectedParentRelFields,
-        this.selectedChildRelFields,
-        fieldOrder
+        this.userEmail
       );
-      const cleanData = JSON.parse(JSON.stringify(rows));
-      const cleanHeaders = JSON.parse(JSON.stringify(headers));
-
-      const result = await emailCsv({
-        objectName: this.selectedObject,
-        data: cleanData,
-        headers: cleanHeaders,
-        recipientEmail: this.userEmail
-      });
 
       if (result?.success) {
-        this.showToast("success", result.message, "success");
+        showToast(this, "success", result.message, "success");
       } else {
         const errMsg = result?.message || "Email failed without message.";
         console.error("❌ Apex reported failure:", errMsg);
-        this.showToast("error", errMsg, "error");
+        showToast(this, "error", errMsg, "error");
       }
     } catch (error) {
       const fallback =
         error?.body?.message || error?.message || "Unknown export error";
       console.error("🔥 Uncaught export error:", fallback);
-      this.showToast("error", fallback, "error");
+      showToast(this, "error", fallback, "error");
     }
   }
 
@@ -793,82 +663,38 @@ export default class SoqlBuilder extends LightningElement {
     this.showAllWhereFields = event.target.checked;
   }
 
+  toggleParentSection() {
+    this.isParentOpen = !this.isParentOpen;
+  }
+
+  toggleChildSection() {
+    this.isChildOpen = !this.isChildOpen;
+  }
+
+  toggleWhereSection() {
+    this.isWhereOpen = !this.isWhereOpen;
+  }
+
+  togglePreviewSection() {
+    this.isPreviewOpen = !this.isPreviewOpen;
+  }
+
   //------------------- UTILITY METHODS --------------------------
   get ui() {
-  try {
-    const values = computeUIValues(this);
-    return values;
-  } catch (error) {
-    console.error("❌ Error in ui getter:", error?.message || error);
-    return {};
+    try {
+      const values = computeUIValues(this);
+      return values;
+    } catch (error) {
+      console.error("❌ Error in ui getter:", error?.message || error);
+      return {};
+    }
   }
-}
 
   get groupedWhereFieldOptions() {
-    const groups = [];
-
-    // Main object fields
-    const mainFields = (
-      this.showAllWhereFields
-        ? this.mainFieldOptions
-        : this.selectedMainFields.map((fieldName) => {
-            const match = this.mainFieldOptions.find(
-              (f) => f.value === fieldName
-            );
-            return match || { label: fieldName, value: fieldName };
-          })
-    ).map((f) => ({
-      label: `${f.label || f.value} (${f.value})`,
-      value: f.value
-    }));
-
-    if (mainFields.length) {
-      groups.push({
-        label: "Main Object Fields",
-        options: mainFields
-      });
-    }
-
-    // Parent fields
-    const parentGroups = Object.entries(
-      this.showAllWhereFields
-        ? this.parentRelFieldOptions
-        : this.selectedParentRelFields
-    );
-
-    parentGroups.forEach(([rel, fields]) => {
-      const options = fields.map((f) => {
-        const fieldName = this.showAllWhereFields ? f.value : f;
-        const label = this.showAllWhereFields
-          ? f.label
-          : fieldName.split(".").pop();
-        return {
-          label: `${label} (${fieldName})`,
-          value: fieldName
-        };
-      });
-
-      if (options.length) {
-        groups.push({
-          label: `${rel} (Parent)`,
-          options
-        });
-      }
-    });
-    console.log(
-      "📦 Grouped WHERE field options:",
-      JSON.stringify(groups, null, 2)
-    );
-    return groups;
+    return getGroupedWhereFieldOptions(this);
   }
 
   get flatWhereFieldOptions() {
-    const grouped = this.groupedWhereFieldOptions;
-    return grouped.flatMap((group) =>
-      group.options.map((opt) => ({
-        label: `${group.label} — ${opt.label}`,
-        value: opt.value
-      }))
-    );
+    return getFlatWhereFieldOptions(this);
   }
 }
