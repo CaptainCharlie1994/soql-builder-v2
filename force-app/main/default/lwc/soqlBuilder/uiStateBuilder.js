@@ -1,6 +1,5 @@
 // uiStateBuilder.js
-
-import { createNewFilter } from "c/whereClauseManager/whereClauseManager";
+import { createNewFilter } from "c/whereClauseManager";
 
 export function computeUIValues(ctx) {
   return {

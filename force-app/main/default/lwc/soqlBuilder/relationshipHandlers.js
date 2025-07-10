@@ -2,7 +2,8 @@
 
 import getFieldsForObject from "@salesforce/apex/SoqlBuilderHelper.getFieldsForObject";
 import parentFieldManager from "c/parentFieldManager";
-import { createNewFilter } from "c/whereClauseManager";
+import { createNewFilter, updateFilter, removeFilter } from "c/whereClauseManager";
+
 
 /**
  * Handles parent relationship selection changes.
