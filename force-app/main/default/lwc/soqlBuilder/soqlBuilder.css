@@ -47,7 +47,75 @@ html, body {
   height: 100%;
   z-index: 1;
   overscroll-behavior: contain;
-   padding-bottom: 200px;
+  padding-bottom: 200px;
+  flex-wrap: nowrap;
+}
+
+.left-panel {
+  transition: width 0.3s ease-in-out;
+  overflow-y: auto;
+  width: 50%;
+  z-index: 1;
+  position: relative;
+  border-right: 1px solid #e0e5ee;
+}
+
+/* Default narrow mode */
+.left-panel.narrow {
+  flex: 1 1 50%;
+}
+
+/* Full-screen when panel is collapsed */
+.left-panel.full {
+  flex: 1 1 100%;
+}
+.right-panel-container-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  max-width: 100%;
+  z-index: 2;
+  overflow: visible;
+  padding-right: 0;
+}
+
+
+.right-panel {
+  width: 100%;
+  padding: 0; /* Remove internal padding if any */
+  background: #f9fafb;
+  border-left: 1px solid #d8dde6;
+  box-shadow: -1px 0 4px rgba(0, 0, 0, 0.05);
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.right-panel-content {
+  animation: fadeIn 0.3s ease-in-out;
+  max-width: 100vw;
+  height: 100%;
+  overflow-x: auto;
+}
+
+.right-panel.slide-in {
+  transform: translateX(0);
+  width: 100%;
+}
+
+.right-panel.slide-out {
+  transform: translateX(calc(100% - 10px));
+  width: 0px;
+  overflow: visible;
+}
+.right-panel-container-wrapper.visible {
+  flex: 1 1 50%;
+  max-width: 50%;
+  min-width: 0;
+}
+
+.right-panel-container-wrapper.hidden {
+  flex: 0 0 0;
 }
 
 .fixed-buttons { 
@@ -96,22 +164,7 @@ html, body {
   border-radius: 8px; 
 }
 
-.left-panel {
-  transition: width 0.3s ease-in-out;
-  overflow-y: auto;
-  width: 50%;
-  z-index: 1;
-  position: relative;
-  border-right: 1px solid #e0e5ee;
-}
 
-.left-panel.full {
-  width: 100%;
-}
-
-.left-panel.narrow {
-  width: 50%;
-}
 
 .where-clause-container {
   width: 100%;
@@ -123,49 +176,7 @@ html, body {
 .filter-row lightning-input {
   width: 100%;
 }
-.right-panel-container-wrapper {
-  position: relative;
-  width: 100%;
-  height: 100vh;
-  max-width: 100%;
-  z-index: 2;
-  overflow: visible;
-  padding-right: 0;
-}
-.right-panel-container-wrapper.visible {
-  width: 50%;
-}
 
-.right-panel-container-wrapper.hidden {
-  width: 0px;
-  overflow: visible;
-  position: relative;
-}
-
-.right-panel {
-  width: 100%;
-  padding: 0; /* Remove internal padding if any */
-  background: #f9fafb;
-  border-left: 1px solid #d8dde6;
-  box-shadow: -1px 0 4px rgba(0, 0, 0, 0.05);
-}
-
-.right-panel-content {
-  animation: fadeIn 0.3s ease-in-out;
-  max-width: 100vw;
-  overflow-x: auto;
-}
-
-.right-panel.slide-in {
-  transform: translateX(0);
-  width: 100%;
-}
-
-.right-panel.slide-out {
-  transform: translateX(calc(100% - 10px));
-  width: 0px;
-  overflow: visible;
-}
 
 
 
@@ -281,8 +292,14 @@ html, body {
   overflow: visible !important;
 }
 
+.table-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+
 .scrollable-table-container{
-  max-height: 500px;
+  max-height: 70vh;
   overflow-y: auto;
   overflow-x: auto;
   display: block;
@@ -365,8 +382,7 @@ html, body {
   border-radius: 4px;
   font-weight: 600;
   font-size: 1rem;
-  border: 1px solid #d8dde6;
-  border-bottom: none;
+  border: 1px solid #000000;
   position: relative;
   padding: .5rem;
 }
@@ -499,6 +515,7 @@ html, body {
   width: 25%;
   max-width: 25%;
 }
+
 
 
 

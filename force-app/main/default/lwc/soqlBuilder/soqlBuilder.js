@@ -587,8 +587,8 @@ export default class SoqlBuilder extends LightningElement {
         this.tableColumns = headers.map((header) => ({
           label: header,
           fieldName: header,
-          initialWidth: 300,
-          fixedWidth: 300
+          initialWidth: 100,
+          fixedWidth: 100
         }));
 
         if (rows.length === 0) {
@@ -718,9 +718,11 @@ export default class SoqlBuilder extends LightningElement {
     this.useAdvancedMode = !this.useAdvancedMode;
   }
 
-  togglePanel() {
-    this.isPanelOpen = !this.isPanelOpen;
-  }
+ togglePanel() {
+  this.isPanelOpen = !this.isPanelOpen;
+  console.log('isPanelOpen:', this.isPanelOpen);
+  console.log('leftPanelClass:', this.ui.leftPanelClass);
+}
 
   handleToggleWhereFieldScope(event) {
     this.showAllWhereFields = event.target.checked;

@@ -11,6 +11,9 @@ export function computeUIValues(ctx) {
     rightPanelWrapperClass: ctx.isPanelOpen
       ? "right-panel-container-wrapper visible"
       : "right-panel-container-wrapper hidden",
+    rightPanelClass: ctx.isPanelOpen
+      ? "right-panel slide-in"
+      : "right-panel slide-out",
     leftPanelClass: ctx.isPanelOpen ? "left-panel narrow" : "left-panel full",
     showFieldSelector: ctx.selectedObject && ctx.mainFieldOptions.length > 0,
     filtersWithOperatorOptions: ctx.filters.map((f, index) => ({
