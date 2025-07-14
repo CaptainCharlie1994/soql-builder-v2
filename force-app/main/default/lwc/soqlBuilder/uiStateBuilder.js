@@ -33,7 +33,9 @@ export function computeUIValues(ctx) {
     ),
     childFieldConfigs: Object.keys(ctx.childRelFieldOptions).map((rel) => {
       const original = ctx.childRelFieldOptions[rel] || [];
-      const filtered = ctx.filteredChildFieldOptions[rel];
+      const filtered = ctx.filteredChildFieldOptions[rel].sort((a, b) =>
+        a.label.localeCompare(b.label)
+      );
       return {
         rel,
         label: `${rel} (expandable...)`,
@@ -51,9 +53,17 @@ export function computeUIValues(ctx) {
           [];
 
         const selected = ctx.selectedChildRelFields[rel] || [];
-
-        const selectedOptions = allOptions.filter((opt) =>
-          selected.includes(opt.value)
+        console.log(
+          "Select Child Fields -> : ",
+          JSON.stringify(ctx.selectedChildRelFields[rel])
+        );
+        const selectedOptions = selected.map((field) => {
+          const match = allOptions.find((opt) => opt.value === field);
+          return match || { label: field, value: field };
+        });
+        console.log(
+          "All options filtered by selected field: ",
+          JSON.stringify(selectedOptions)
         );
         return {
           rel,
@@ -69,7 +79,9 @@ export function computeUIValues(ctx) {
       .filter(Boolean),
     parentFieldConfigs: Object.keys(ctx.parentRelFieldOptions).map((rel) => {
       const original = ctx.parentRelFieldOptions[rel] || [];
-      const filtered = ctx.filteredParentRelFieldOptions[rel];
+      const filtered = ctx.filteredParentRelFieldOptions[rel].sort((a, b) =>
+        a.label.localeCompare(b.label)
+      );
       return {
         rel,
         label: `${rel} (expandable...)`,
@@ -159,6 +171,7 @@ export function getFlatWhereFieldOptions(ctx) {
 
 export function resetUIState(state) {
   state.dualListBoxReady = false;
+  //state.objectSearchTerm = '';
 
   state.mainFieldOptions = [];
   state.filteredFieldOptions = [];
@@ -174,7 +187,7 @@ export function resetUIState(state) {
   state.selectedChildRelFields = {};
   state.selectedParentRelFields = {};
 
-  state.filters = [createNewFilter];
+  state.filters = [createNewFilter()];
   state.useAdvancedMode = false;
   state.rawWhereClause = "";
 

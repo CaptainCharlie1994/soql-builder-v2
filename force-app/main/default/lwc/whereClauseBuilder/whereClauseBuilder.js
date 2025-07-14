@@ -1,6 +1,10 @@
 // whereClauseBuilder.js
 import { LightningElement, api } from "lwc";
-import { updateFilter, createNewFilter, removeFilter } from "c/whereClauseManager";
+import {
+  updateFilter,
+  createNewFilter,
+  removeFilter
+} from "c/whereClauseManager";
 
 export default class WhereClauseBuilder extends LightningElement {
   @api filters = [];
@@ -8,19 +12,34 @@ export default class WhereClauseBuilder extends LightningElement {
   @api rawWhereClause = "";
   @api context = "main";
   @api availableFields = [];
+  connectorOptions = [
+    { label: "AND", value: "AND" },
+    { label: "OR", value: "OR" }
+  ];
+
+  renderedCallback() {
+    console.log("🔎 Current filters:", JSON.stringify(this.filters));
+    console.log(
+      "⚙ availableFields in WHERE builder:",
+      JSON.stringify(this.availableFields)
+    );
+  }
 
   handleChange(event) {
     const index = parseInt(event.target.dataset.index, 10);
     const field = event.target.name;
     const value = event.target.value;
-    console.log("in handleChange - Event: " , event);
-    console.log("in handleChange - Event.Target: ", event.target);
-    console.log("in handleChange - Field: ", field);
-    console.log("in handleChange - Value: ", value);
-    console.log("in handleChange - Index: ", index);
+    
+    this.filters = this.filters.map((f) => ({
+      connector: "",
+      ...f
+    }));
+    if (field === "connector") {
+      this.filters[index].connector = value;
+    } else {
+      this.filters = updateFilter(this.filters, index, field, value);
+    }
 
-
-    this.filters = updateFilter(this.filters, index, field, value);
     this.dispatchEvent(
       new CustomEvent("filterchange", {
         detail: {
@@ -64,7 +83,7 @@ export default class WhereClauseBuilder extends LightningElement {
   }
 
   handleRawChange(event) {
-    this.rawWhereClause = event.detail.value;
+    this.rawWhereClause = event.target.value;
     this.dispatchEvent(
       new CustomEvent("rawchange", {
         detail: {

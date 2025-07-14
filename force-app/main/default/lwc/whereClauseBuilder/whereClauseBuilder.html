@@ -64,6 +64,18 @@
                 onclick={handleRemove}
               ></lightning-button-icon>
             </div>
+            <div
+              class="slds-col slds-size_1-of-1 slds-medium-size_1-of-12 slds-align-middle"
+            >
+              <lightning-combobox
+                label="Connector"
+                name="connector"
+                data-index={index}
+                value={filter.connector}
+                options={connectorOptions}
+                onchange={handleChange}
+              ></lightning-combobox>
+            </div>
           </div>
         </template>
 

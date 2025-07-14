@@ -58,3 +58,24 @@
 .toggle-switch:checked + .slider::before {
   transform: translateX(20px);
 }
+
+/* collapse‐panels used everywhere, so let them show overflow */
+.collapsible-card .collapsible-content {
+  overflow: visible !important;
+}
+
+/* that also covers your .where-clause-container */
+.where-clause-container {
+  overflow: visible !important;
+}
+
+/* bump all comboboxes in this component */
+:host lightning-combobox {
+  position: relative;
+  z-index: 9000;
+}
+
+/* and the underlying listbox, just in case */
+:host lightning-combobox .slds-dropdown {
+  z-index: 9001;
+}

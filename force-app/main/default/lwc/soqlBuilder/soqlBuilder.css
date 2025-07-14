@@ -1,5 +1,9 @@
 /* soqlBuilder.css */
-
+/* apply to *all* comboboxes in this LWC */
+:host lightning-combobox {
+  position: relative;
+  z-index: 1000;
+}
 /* Host element always full-width container */
 :host {
   display: block;
@@ -39,6 +43,7 @@
   width: 100%;
   margin-bottom: 1.5rem;
 }
+
 
 /* WHERE header row */
 .builder-wrapper .slds-grid.slds-grid_align-spread {
@@ -80,22 +85,6 @@
   border: 1px solid #e0e5ee;
 }
 
-.soql-preview-before-render {
-  font-family: 'SFMono-Regular', Consolas, monospace;
-  background-color: #f6f8fa;
-  padding: 0.75rem;
-  border-radius: 4px;
-  white-space: pre-wrap;
-  word-break: break-word;
-  border: 1px solid #e0e5ee;
-  color: red;
-}
-
-.soql-preview-title{
-  color:#1b1b1b;
-  font-size: 2rem;
- 
-}
 
 /* Button spacing tweaks */
 .builder-wrapper lightning-button,
@@ -114,11 +103,41 @@
   }
 }
 
+/* collapse‐panels used everywhere, so let them show overflow */
+.collapsible-card .collapsible-content {
+  overflow: visible !important;
+}
+
+/* that also covers your .where-clause-container */
+.where-clause-container {
+  overflow: visible !important;
+}
+
 .scrollable-table-container{
   max-height: 500px;
   overflow-y: auto;
-  border-top: 1px solid #e0e5ee;
-  border-bottom: 1px solid #e0e5ee;
+  overflow-x: auto;
+  display: block;
+
+  box-sizing: border-box;
+  position: relative;
+}
+
+.scrollable-table-container::after {
+  content: '⟶ Scroll right to see more columns';
+  font-size: 0.75rem;
+  color: #555;
+  position: absolute;
+  bottom: 8px;
+  right: 16px;
+}
+
+
+
+
+.scrollable-table-container lightning-datatable {
+  table-layout: fixed;
+  width: max-content; /* or try 100% if you want it to fill */
 }
 
 .child-section {
@@ -128,12 +147,6 @@
 }
 
 
-.query-panel {
-  padding: 1.5rem;
-  border-radius: 8px;
-  background: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
 
 
 .section-card {
@@ -144,6 +157,7 @@
   margin-bottom: 1.5rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   width: 100%;
+  max-width: 100vw;
 }
 
 .section-header {
@@ -229,47 +243,7 @@
 }
 
 
-.preview-section-card {
-  background-color: #a9c2db; /* Light background for contrast */
-  border: 1px solid #ddd;    /* Subtle border */
-  border-radius: 8px;        /* Rounded corners */
-  padding: 1rem;             /* Inner spacing */
-  margin-bottom: 1rem;       /* Space between cards */
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Soft shadow for depth */
-}
 
-.action-button {
-  background: linear-gradient(135deg, #4f46e5, #3b82f6); /* Indigo to blue gradient */
-  color: #fff;
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  
-
-}
-
-.action-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-}
-
-.action-button:active {
-  transform: scale(0.98);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.action-button:focus {
-  outline: 2px solid #93c5fd;
-  outline-offset: 2px;
-}
 .panel-container {
   position: relative;
   display: flex;
@@ -308,9 +282,9 @@
 }
 .right-panel-container-wrapper {
   position: relative;
-  display: flex;
   width: 100%;
   height: 100vh;
+  max-width: 100%;
   z-index: 2;
   overflow: visible;
   padding-right: 0;
@@ -424,13 +398,19 @@
 
 .right-panel-content {
   animation: fadeIn 0.3s ease-in-out;
+  max-width: 100vw;
+  overflow-x: auto;
 }
 .query-results-panel-wrapper {
   width: 100%;
-  max-width: 1200;
+  max-width: calc(100% - 50px);
   padding: 0; /* Remove padding here */
   margin: 0;
   box-sizing: border-box;
+  overflow-x: auto;
+  max-height: calc(100vh - 200px); /* Reserve space for header/footer */
+  overflow-y: auto;
+
 }
 
 .query-panel{
@@ -448,6 +428,11 @@
   margin-bottom: 1.5rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   overflow: hidden;
+}
+
+/* allow dropdowns inside a collapsed/accordion card to bleed out */
+.collapsible-card .collapsible-content {
+  overflow: visible !important;
 }
 
 .collapsible-header {
@@ -574,40 +559,34 @@
   padding: 0;
 }
 
-.useAdvanced-button-container {
-  display: flex;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding: 0.5rem 1rem;
-  background-color: #f3f4f6;
-  border: 1px solid #d8dde6;
-  border-radius: 6px;
-  width: fit-content;
-}
 
-:host(.dark-mode) {
-  --bg-color: #1e1e1e;
-  --text-color: #f0f0f0;
-  --card-bg: #2c2c2c;
-  --border-color: #444;
-  --accent-color: #3b82f6;
-}
-
+:host(.dark-mode),
 :host(.dark-mode) .builder-wrapper,
 :host(.dark-mode) .section-card,
-:host(.dark-mode) .collapsible-card {
-  background-color: var(--card-bg);
+:host(.dark-mode) .collapsible-card,
+:host(.dark-mode) .soql-preview,
+:host(.dark-mode) .panel-container,
+:host(.dark-mode) .query-panel,
+:host(.dark-mode) .left-panel,
+:host(.dark-mode) .right-panel,
+:host(.dark-mode) .preview-section-card {
+  background-color: var(--bg-color);
   color: var(--text-color);
-  border-color: var(--border-color);
 }
 
-:host(.dark-mode) .soql-preview {
-  background-color: #2d2d2d;
-  color: #f8f8f2;
-  border-color: var(--border-color);
-}
-
-:host(.dark-mode) .toggle-button {
-  background: linear-gradient(135deg, #374151, #1f2937);
+:host(.dark-mode) lightning-input,
+:host(.dark-mode) lightning-combobox,
+:host(.dark-mode) lightning-textarea,
+:host(.dark-mode) .slds-input {
+  background-color: #2c2c2c;
   color: #f0f0f0;
+  border-color: #555;
+}
+
+:host(.dark-mode) .toggle-button:hover {
+  background: linear-gradient(135deg, #2d2d2d, #1f1f1f);
+}
+
+.slds-cell{
+  padding-right: 1rem;
 }

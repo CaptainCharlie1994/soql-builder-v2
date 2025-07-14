@@ -6,6 +6,8 @@ public with sharing class SoqlBuilderHelper {
     public String operator;
     @AuraEnabled
     public String value;
+    @AuraEnabled
+    public String connector;
   }
 
   @AuraEnabled
@@ -143,24 +145,45 @@ public with sharing class SoqlBuilderHelper {
     return soql;
   }
 
+  public class rawObjectOptions implements Comparable {
+    @AuraEnabled public String label;
+    @AuraEnabled public String value;
+
+    public rawObjectOptions(String label, String value) {
+      this.label = label;
+      this.value = value;
+    }
+
+    public Integer compareTo(Object other) {
+      rawObjectOptions o = (rawObjectOptions) other;
+      return this.label.toLowerCase().compareTo(o.label.toLowerCase());
+    }
+  }
+
   @AuraEnabled(cacheable=true)
-  public static List<String> getQueryableObjects() {
+  public static List<rawObjectOptions> getQueryableObjects() {
     Map<String, Schema.SObjectType> globalDescribe = Schema.getGlobalDescribe();
-    List<String> queryable = new List<String>();
+    List<rawObjectOptions> queryable = new List<rawObjectOptions>();
 
     for (String name : globalDescribe.keySet()) {
-      Schema.DescribeSObjectResult describe = globalDescribe.get(name)
+      Schema.DescribeSObjectResult objInfo = globalDescribe.get(name)
         .getDescribe();
       if (
-        describe.isQueryable() &&
-        describe.isAccessible() &&
-        !describe.isCustomSetting() &&
-        !describe.isDeprecatedAndHidden()
+        objInfo.isQueryable() &&
+        objInfo.isAccessible() &&
+        !objInfo.isCustomSetting() &&
+        !objInfo.isDeprecatedAndHidden()
       ) {
-        queryable.add(name);
+        String label = objInfo.getLabel();
+        if(String.isBlank(label) || label.startsWith('__MISSING LABEL__')){
+          label = name;
+        }
+        queryable.add(new rawObjectOptions(label, name));
       }
     }
     queryable.sort();
+    System.debug('Returning object List: ' + queryable);
+    // return JSON.serialize(queryable);')
     return queryable;
   }
 
@@ -254,6 +277,7 @@ public with sharing class SoqlBuilderHelper {
   @AuraEnabled
   public static List<SObject> runQuery(String soql) {
     try {
+      System.debug('This is the final query sent in JSON form' + soql);
       return Database.query(soql);
     } catch (Exception e) {
       throw new AuraHandledException('SOQL Error: ' + e.getMessage());
@@ -284,11 +308,14 @@ public with sharing class SoqlBuilderHelper {
 
       if (f.value != null && String.valueOf(f.value).trim() != '') {
         String formatted = formatFilterValue(objectApiName, f.field, f.value);
-        clauses.add(f.field + ' ' + f.operator + ' ' + formatted);
+        clauses.add(
+          f.field + ' ' + f.operator + ' ' + formatted + ' ' + f.connector
+        );
       }
     }
+    String joinedClauses = String.join(clauses, ' ');
 
-    return clauses.isEmpty() ? '' : ' WHERE ' + String.join(clauses, ' AND ');
+    return clauses.isEmpty() ? '' : ' WHERE ' + joinedClauses;
   }
 
   private static String buildChildWhereClause(
@@ -316,13 +343,17 @@ public with sharing class SoqlBuilderHelper {
       String field = (String) row.get('field');
       String op = (String) row.get('operator');
       String val = String.valueOf(row.get('value'));
+      String con = String.valueOf(row.get('connector'));
       if (!String.isBlank(field) && !String.isBlank(val)) {
-        parts.add(
-          field + ' ' + op + ' ' + formatFilterValue(objectApiName, field, val)
-        );
+        String formatted = formatFilterValue(objectApiName, field, val);
+        parts.add(field + ' ' + op + ' ' + formatted + ' ' + con);
       }
     }
-    return parts.isEmpty() ? '' : ' WHERE ' + String.join(parts, ' AND ');
+    String joinedParts = String.join(parts, ' ');
+    System.debug('Joined Parts -> ' + parts);
+    System.debug('Joined Parts-> ' + joinedParts);
+
+    return parts.isEmpty() ? '' : ' WHERE ' + joinedParts;
   }
 
   private static String formatFilterValue(
@@ -330,18 +361,12 @@ public with sharing class SoqlBuilderHelper {
     String fieldName,
     Object value
   ) {
-    System.debug('🔍 formatFilterValue called with:');
-    System.debug('• objectApiName: ' + objectApiName);
-    System.debug('• fieldName: ' + fieldName);
-    System.debug('• raw value: ' + value);
-
     if (value == null) {
       System.debug('⚠️ Value is null → returning null');
       return 'null';
     }
 
     String clean = String.valueOf(value).trim();
-    System.debug('• Cleaned value: ' + clean);
 
     if (clean.toLowerCase() == 'null') {
       System.debug('⚠️ Value is string "null" → returning null');
@@ -350,18 +375,13 @@ public with sharing class SoqlBuilderHelper {
 
     // Handle parent fields like CreatedBy.IsActive
     if (fieldName.contains('.')) {
-      System.debug('🔁 Detected parent field reference');
-
       List<String> parts = fieldName.split('\\.');
       if (parts.size() != 2) {
-        System.debug('❌ Invalid nested field format → fallback to quote');
         return quote(clean);
       }
 
       String parentRel = parts[0];
       String nestedField = parts[1];
-      System.debug('• Parent relationship: ' + parentRel);
-      System.debug('• Nested field: ' + nestedField);
 
       Schema.SObjectType baseType = Schema.getGlobalDescribe()
         .get(objectApiName);

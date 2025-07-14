@@ -8,21 +8,11 @@ import { showToast } from "./toastUtils";
 
 //Imports of Modularised code.
 
-import operatorResolver from "c/operatorResolver";
 import parentFieldManager from "c/parentFieldManager";
 import { filterOptions } from "c/listFilterUtils";
 import { debounce } from "c/debounce";
-import {
-  computeUIValues,
-  getGroupedWhereFieldOptions,
-  getFlatWhereFieldOptions,
-  resetUIState
-} from "./uiStateBuilder";
-import {
-  createNewFilter,
-  updateFilter,
-  removeFilter
-} from "c/whereClauseManager";
+import { computeUIValues, resetUIState } from "./uiStateBuilder";
+import { createNewFilter, removeFilter } from "c/whereClauseManager";
 
 import {
   handleParentRelSelectionHelper,
@@ -62,6 +52,7 @@ export default class SoqlBuilder extends LightningElement {
   @track state = {
     // 1) Object Picker
     objectOptions: [],
+    objectSearchTerm: "",
     selectedObject: "",
 
     // 2) Main Fields
@@ -126,6 +117,13 @@ export default class SoqlBuilder extends LightningElement {
   }
   renderedCallback() {
     console.log("✅ soqlBuilder rendered");
+    const scrollContainer = this.template.querySelector(
+      '[data-id="scrollContainer"]'
+    );
+    if (scrollContainer) {
+      console.log("📐 scrollWidth:", scrollContainer.scrollWidth);
+      console.log("📏 clientWidth:", scrollContainer.clientWidth);
+    }
   }
 
   //Wired objects to invoke Apex Classes.
@@ -134,6 +132,10 @@ export default class SoqlBuilder extends LightningElement {
     if (data) {
       //console.log("🧾 Raw object list received:", data);
       this.rawObjectList = [...data];
+      console.log(
+        "shallow clone of rawObjectList as data ",
+        JSON.stringify(data)
+      );
       this.filterObjectList();
     } else {
       console.error("❌ Error fetching objects:", error);
@@ -205,7 +207,6 @@ export default class SoqlBuilder extends LightningElement {
               (f.type || "").toLowerCase() === "reference" && f.relationshipName
           )
           .map((f) => {
-            const refLabel = (f.referenceTo || "Unknown").split(",").join(", ");
             return parentFieldManager.formatRelationshipOption(f);
           })
           .sort((a, b) =>
@@ -369,7 +370,7 @@ export default class SoqlBuilder extends LightningElement {
   addChildFieldConfig(rel, fields) {
     const options = buildFieldOptions(fields);
 
-    const selected = this.selectedChildRelFields?.[rel] || ["Id"];
+    const selectedOptions = this.selectedChildRelFields?.[rel] || ["Id"];
 
     this.childRelFieldOptions = {
       ...this.childRelFieldOptions,
@@ -378,7 +379,7 @@ export default class SoqlBuilder extends LightningElement {
 
     this.selectedChildRelFields = {
       ...this.selectedChildRelFields,
-      [rel]: selected
+      [rel]: selectedOptions
     };
 
     this.filteredChildFieldOptions = {
@@ -396,7 +397,7 @@ export default class SoqlBuilder extends LightningElement {
     const listType = event.target.dataset.listType;
     const term = event.target.value;
 
-    if (listType === "main") {
+    if (listType === "mainField") {
       this.filteredFieldOptions = filterOptions(
         this.mainFieldOptions,
         term,
@@ -441,6 +442,11 @@ export default class SoqlBuilder extends LightningElement {
       ...this.childRawWhere,
       [rel]: value
     };
+    this.debouncedUpdatePreview();
+    console.log(
+      "This is the new event.detail: " + JSON.stringify(event.detail)
+    );
+    console.log("This is the new event.detail.value: " + JSON.stringify(value));
   }
 
   handleChildToggleMode(event) {
@@ -455,23 +461,23 @@ export default class SoqlBuilder extends LightningElement {
     this.childFilters = { ...this.childFilters, [rel]: filters };
     this.debouncedUpdatePreview();
   }
-  
+
   handleChildRemoveFilter(event) {
-  const { rel, index } = event.detail;      // pull index from detail
-  const original = this.childFilters[rel] || [];
-  const updated  = removeFilter(original, index);
-  this.childFilters = {
-    ...this.childFilters,
-    [rel]: updated
-  };
-  this.debouncedUpdatePreview();
-}
+    const { rel, index } = event.detail; // pull index from detail
+    const original = this.childFilters[rel] || [];
+    const updated = removeFilter(original, index);
+    this.childFilters = {
+      ...this.childFilters,
+      [rel]: updated
+    };
+    this.debouncedUpdatePreview();
+  }
 
   handleRemoveFilter(event) {
     const index = parseInt(event.detail.index, 10);
     console.log("Filters before removal: ", JSON.stringify(this.filters));
     this.filters = removeFilter(this.filters, index);
-     console.log("Filters after removal: ", this.filters);
+    console.log("Filters after removal: ", this.filters);
     this.debouncedUpdatePreview();
   }
   handleFilterChange(event) {
@@ -481,6 +487,7 @@ export default class SoqlBuilder extends LightningElement {
 
   handleWhereInputChange(event) {
     this.rawWhereClause = event.detail.value;
+    this.debouncedUpdatePreview();
   }
 
   handleToggleInclude(event) {
@@ -524,24 +531,31 @@ export default class SoqlBuilder extends LightningElement {
     let filtered = [...this.rawObjectList];
 
     if (!this.includeNonObjects) {
+      //this.includeNonObjects is a flag used for the Object Selector.
       filtered = filtered.filter(
-        (obj) => !skipThesePatterns.some((regex) => regex.test(obj))
+        (obj) => !skipThesePatterns.some((regex) => regex.test(obj.value))
+      );
+    }
+    if (this.objectSearchTerm && this.objectSearchTerm.length > 1) {
+      console.log("if clause entered but may fail: ");
+      filtered = filtered.filter(
+        ({ label, value }) =>
+          label.toLowerCase().includes(this.objectSearchTerm) ||
+          value.toLowerCase().includes(this.objectSearchTerm)
+      );
+      console.log(
+        "state of the filtered object list whilst searching: ",
+        JSON.stringify(filtered)
       );
     }
 
     this.selectedObject = null;
 
-    this.objectOptions = filtered
-      .map((apiName) => ({
-        label: apiName,
-        value: apiName
-      }))
-      .sort((a, b) =>
-        a.label.localeCompare(b.label, undefined, {
-          numeric: true,
-          sensitivity: "base"
-        })
-      );
+    this.objectOptions = [...filtered];
+    this.objectOptions = filtered.map(({ label, value }) => ({
+      label: `${label} (${value})`,
+      value
+    }));
   }
   // -----------------SOQL PREVIEW -------------------------------
 
@@ -572,7 +586,9 @@ export default class SoqlBuilder extends LightningElement {
         this.queryResults = rows;
         this.tableColumns = headers.map((header) => ({
           label: header,
-          fieldName: header
+          fieldName: header,
+          initialWidth: 300,
+          fixedWidth: 300
         }));
 
         if (rows.length === 0) {
@@ -641,7 +657,8 @@ export default class SoqlBuilder extends LightningElement {
         this.filters.map((f) => ({
           field: f.field,
           operator: f.operator,
-          value: f.value
+          value: f.value,
+          connector: f.connector
         }))
       ),
       selectedChildRelFields: this.selectedChildRelFields,
@@ -739,11 +756,38 @@ export default class SoqlBuilder extends LightningElement {
     }
   }
 
-  handleTryExample(event) {
-    const exampleSoql = event.detail;
-    this.useAdvancedMode = true;
-    this.rawWhereClause = exampleSoql;
-    this.debouncedUpdatePreview();
+  toggleReset() {
+    resetUIState(this);
+    this.selectedObject = null;
+    this.queryResults = [];
+    this.tableColumns = [];
+    this.rawResult = [];
+    this.soqlPreview = null;
+
+    this.isPanelOpen = false;
+    this.isDarkMode = false;
+    this.includeNonObjects = false;
+
+    this.limit = 500;
+    this.orderByField = "";
+    this.orderDirection = "ASC";
+    this.objectSearchTerm = "";
+
+    showToast(
+      this,
+      "Query Reset",
+      "Builder state has been cleared.",
+      "success"
+    );
+  }
+
+  handleObjectSearchInput(event) {
+    try {
+      this.objectSearchTerm = event.target.value;
+      this.filterObjectList();
+    } catch (error) {
+      console.error("Search handler error:", error?.message || error);
+    }
   }
 
   //------------------- UTILITY METHODS --------------------------

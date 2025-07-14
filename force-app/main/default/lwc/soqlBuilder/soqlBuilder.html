@@ -8,6 +8,10 @@
     onclick={toggleDarkMode}
     variant="neutral"
   ></lightning-button>
+  <lightning-button
+    label="RESET QUERY"
+    onclick={toggleReset}
+  ></lightning-button>
   <c-how-to-modal ontryexample={handleTryExample}></c-how-to-modal>
   <!--+++++++++ OVERALL CONTAINER +++++++++-->
   <div class="panel-container slds-grid">
@@ -29,7 +33,13 @@
 
               <h2 class="section-header">Object Selector</h2>
               <p class="section-subtitle">Step 1: Choose your base object</p>
-
+              <lightning-input
+                type="search"
+                placeholder="Search objects…"
+                data-list-type="mainObject"
+                onchange={handleObjectSearchInput}
+                class="slds-m-bottom_x-small"
+              ></lightning-input>
               <lightning-combobox
                 value={selectedObject}
                 options={objectOptions}
@@ -48,7 +58,7 @@
               <lightning-input
                 type="search"
                 placeholder="Search fields…"
-                data-list-type="main"
+                data-list-type="mainFields"
                 onchange={handleOptionsSearch}
                 class="slds-m-bottom_x-small"
               ></lightning-input>
@@ -252,6 +262,7 @@
 
                   <!-- Controls (Limit, Order By, Direction) -->
                   <c-soql-builder-controls
+                    class="bottom"
                     oncontrolsupdate={handleControlsUpdate}
                     limit={limit}
                     order-by-field={orderByField}
@@ -288,12 +299,15 @@
                 <div class="section-card">
                   <div class="main-section-header">Query Results</div>
                   <!--+++++++++  EXPORT TABLE   +++++++++-->
-                  <div class="scrollable-table-container">
-                    <lightning-datatable
-                      key-field="Id"
-                      data={ui.visibleResults}
-                      columns={tableColumns}
-                    ></lightning-datatable>
+                  <div class="table-wrapper" style="overflow-x: auto">
+                    <div class="scrollable-table-container">
+                      <lightning-datatable
+                        key-field="Id"
+                        data={ui.visibleResults}
+                        columns={tableColumns}
+                        hide-checkbox-column
+                      ></lightning-datatable>
+                    </div>
                   </div>
                   <template if:true={ui.showExportNotice}>
                     <div
@@ -313,7 +327,6 @@
                       </span>
                     </div>
                   </template>
-                  <!--+++++++++ ACTION BUTTONS +++++++++-->
                 </div>
               </template>
             </div>
@@ -361,4 +374,5 @@
       </template>
     </div>
   </div>
+  <!-- move this back to under the export when it's fixed-->
 </template>

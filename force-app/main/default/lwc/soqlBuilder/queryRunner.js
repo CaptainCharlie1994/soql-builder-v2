@@ -97,7 +97,8 @@ function buildQueryPayload(state) {
       state.filters.map((f) => ({
         field: f.field,
         operator: f.operator,
-        value: f.value
+        value: f.value,
+        connector: f.connector
       }))
     ),
     useAdvancedMode: state.useAdvancedMode,

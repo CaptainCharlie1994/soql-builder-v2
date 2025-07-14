@@ -10,7 +10,7 @@ export default class SoqlBuilderControls extends LightningElement {
     { label: 'Name', value: 'Name' },
     { label: 'Created Date', value: 'CreatedDate' },
     { label: 'Last Modified', value: 'LastModifiedDate' }
-  ];
+  ]; 
 
   directionOptions = [
     { label: 'Ascending', value: 'ASC' },
