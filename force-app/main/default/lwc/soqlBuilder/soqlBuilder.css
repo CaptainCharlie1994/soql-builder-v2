@@ -312,6 +312,7 @@ html, body {
 .scrollable-table-container lightning-datatable {
   table-layout: fixed;
   width: max-content; /* or try 100% if you want it to fill */
+  border: 1px solid #d8dde6; 
 }
 
 

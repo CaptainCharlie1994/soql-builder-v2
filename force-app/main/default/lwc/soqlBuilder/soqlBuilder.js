@@ -117,12 +117,24 @@ export default class SoqlBuilder extends LightningElement {
   }
   renderedCallback() {
     console.log("✅ soqlBuilder rendered");
-    const scrollContainer = this.template.querySelector(
-      '[data-id="scrollContainer"]'
-    );
-    if (scrollContainer) {
-      console.log("📐 scrollWidth:", scrollContainer.scrollWidth);
-      console.log("📏 clientWidth:", scrollContainer.clientWidth);
+    if (!this.hasRenderedStyles) {
+      setTimeout(() => {
+        const style = document.createElement("style");
+        style.innerText = `
+                ::part(base) .slds-table td,
+                ::part(base) .slds-table th {
+                    border: 1px solid #d8dde6;
+                }
+                ::part(base) .slds-table tr:nth-child(even) {
+                    background-color: #f2f9ff;
+                }
+                ::part(base) .slds-table tr:nth-child(odd) {
+                    background-color: #ffffff;
+                }
+            `;
+        this.template.appendChild(style);
+        this.hasRenderedStyles = true;
+      }, 0); // defer until after DOM stabilizes
     }
   }
 
@@ -584,11 +596,20 @@ export default class SoqlBuilder extends LightningElement {
         }
 
         this.queryResults = rows;
+        const container = this.template.querySelector(
+          ".scrollable-table-container"
+        );
+        const tableWidth = container?.clientWidth || 1200; // Fallback if not rendered yet
+        const noOfColumns = headers.length;
+        const columnWidth = Math.min(Math.floor(tableWidth / noOfColumns), 300);
+        const safeWidth = Math.max(columnWidth, 120);
+        console.log("Available width:", tableWidth);
+        console.log("Calculated column width:", columnWidth);
+
         this.tableColumns = headers.map((header) => ({
           label: header,
           fieldName: header,
-          initialWidth: 100,
-          fixedWidth: 100
+          fixedWidth: safeWidth
         }));
 
         if (rows.length === 0) {
@@ -718,11 +739,11 @@ export default class SoqlBuilder extends LightningElement {
     this.useAdvancedMode = !this.useAdvancedMode;
   }
 
- togglePanel() {
-  this.isPanelOpen = !this.isPanelOpen;
-  console.log('isPanelOpen:', this.isPanelOpen);
-  console.log('leftPanelClass:', this.ui.leftPanelClass);
-}
+  togglePanel() {
+    this.isPanelOpen = !this.isPanelOpen;
+    console.log("isPanelOpen:", this.isPanelOpen);
+    console.log("leftPanelClass:", this.ui.leftPanelClass);
+  }
 
   handleToggleWhereFieldScope(event) {
     this.showAllWhereFields = event.target.checked;
