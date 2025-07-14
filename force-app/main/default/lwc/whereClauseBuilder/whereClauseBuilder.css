@@ -68,14 +68,3 @@
 .where-clause-container {
   overflow: visible !important;
 }
-
-/* bump all comboboxes in this component */
-:host lightning-combobox {
-  position: relative;
-  z-index: 9000;
-}
-
-/* and the underlying listbox, just in case */
-:host lightning-combobox .slds-dropdown {
-  z-index: 9001;
-}

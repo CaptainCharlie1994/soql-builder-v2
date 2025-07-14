@@ -596,20 +596,9 @@ export default class SoqlBuilder extends LightningElement {
         }
 
         this.queryResults = rows;
-        const container = this.template.querySelector(
-          ".scrollable-table-container"
-        );
-        const tableWidth = container?.clientWidth || 1200; // Fallback if not rendered yet
-        const noOfColumns = headers.length;
-        const columnWidth = Math.min(Math.floor(tableWidth / noOfColumns), 300);
-        const safeWidth = Math.max(columnWidth, 120);
-        console.log("Available width:", tableWidth);
-        console.log("Calculated column width:", columnWidth);
-
         this.tableColumns = headers.map((header) => ({
           label: header,
-          fieldName: header,
-          fixedWidth: safeWidth
+          fieldName: header
         }));
 
         if (rows.length === 0) {
@@ -822,5 +811,18 @@ export default class SoqlBuilder extends LightningElement {
       console.error("❌ Error in ui getter:", error?.message || error);
       return {};
     }
+  }
+
+  get flattenedRowResults() {
+    return this.ui.visibleResults.map((row, index) => {
+      return {
+        id: row.Id,
+        rowNumber: index + 1,
+        cells: this.tableColumns.map((col) => ({
+          key: col.fieldName,
+          value: row[col.fieldName]
+        }))
+      };
+    });
   }
 }

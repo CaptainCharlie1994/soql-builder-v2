@@ -1,24 +1,6 @@
 <template>
   <c-how-to-modal ontryexample={handleTryExample}></c-how-to-modal>
-  <div class="fixed-buttons">
-    <div class="utility-buttons">
-      <lightning-button
-        label="How-To Guide"
-        onclick={toggleHelpModal}
-      ></lightning-button>
-      <lightning-button
-        label="Toggle Dark Mode"
-        onclick={toggleDarkMode}
-        variant="neutral"
-      ></lightning-button>
-      <lightning-button
-        label="Reset Query"
-        onclick={toggleReset}
-      ></lightning-button>
-      <lightning-button onclick={togglePanel} label={ui.panelToggleLabel}>
-      </lightning-button>
-    </div>
-  </div>
+  
   <div class="soql-app-wrapper">
     <!--+++++++++ OVERALL CONTAINER +++++++++-->
     <div class="panel-container slds-grid">
@@ -279,8 +261,9 @@
             </div>
           </template>
         </div>
+        
       </div>
-
+      
       <!--+++++++++  RIGHT PANEL   +++++++++-->
       <div class={ui.rightPanelWrapperClass}>
         <!--+++++++++  COLLAPSE/EXPAND RIGHT PANEL BUTTON +++++++++-->
@@ -292,14 +275,42 @@
                   <div class="section-card">
                     <div class="main-section-header">Query Results</div>
                     <!--+++++++++  EXPORT TABLE   +++++++++-->
+
                     <div class="table-wrapper">
-                      <div class="scrollable-table-container">
-                        <lightning-datatable
-                          key-field="Id"
-                          data={ui.visibleResults}
-                          columns={tableColumns}
-                          hide-checkbox-column
-                        ></lightning-datatable>
+                      <div class="table-scroll-container">
+                        <template if:true={queryResults}>
+                          <table class="custom-table">
+                            <thead>
+                              <tr>
+                                <th style="width: 40px">#</th>
+                                <template
+                                  for:each={tableColumns}
+                                  for:item="col"
+                                >
+                                  <th key={col.fieldName}>{col.label}</th>
+                                </template>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <template
+                                for:each={flattenedRowResults}
+                                for:item="row"
+                              >
+                                <tr key={row.id}>
+                                  <td style="text-align: center">
+                                    {row.rowNumber}
+                                  </td>
+                                  <template
+                                    for:each={row.cells}
+                                    for:item="cell"
+                                  >
+                                    <td key={cell.key}>{cell.value}</td>
+                                  </template>
+                                </tr>
+                              </template>
+                            </tbody>
+                          </table>
+                        </template>
                       </div>
                     </div>
                     <template if:true={ui.showExportNotice}>
@@ -329,28 +340,27 @@
       </div>
     </div>
   </div>
-  <!--+++++++++ SOQL PREVIEW WINDOW +++++++++-->
-  <!-- Sticky container -->
-  <div class="soql-preview-sticky">
-    <div class="collapsible-card soql-preview-card">
-      <div class="collapsible-header" onclick={togglePreviewSection}>
-        <div>
-          <p class="section-subtitle">Step 6: Review and run your query</p>
-          <h2 class="section-header">SOQL Preview</h2>
-        </div>
-        <lightning-icon
-          icon-name="utility:chevrondown"
-          size="x-small"
-          class="collapse-icon"
-        ></lightning-icon>
-      </div>
-
-      <template if:true={isPreviewOpen}>
-        <div class="collapsible-content">
-          <pre class="soql-preview">{ui.previewText}</pre>
-          <div class="preview-actions"></div>
-        </div>
-      </template>
+  
+  <div class="navigation-bar horizontal-layout">
+    <div class="utility-buttons">
+      <lightning-button
+        label="How-To Guide"
+        onclick={toggleHelpModal}
+      ></lightning-button>
+      <lightning-button
+        label="Toggle Dark Mode"
+        onclick={toggleDarkMode}
+        variant="neutral"
+      ></lightning-button>
+      <lightning-button
+        label="Reset Query"
+        onclick={toggleReset}
+      ></lightning-button>
+      <lightning-button onclick={togglePanel} label={ui.panelToggleLabel}>
+      </lightning-button>
+    </div>
+    <div class="soql-preview-container">
+      <pre class="soql-preview soql-preview-window">{ui.previewText}</pre>
     </div>
     <div class="action-buttons">
       <lightning-button
@@ -368,5 +378,4 @@
       ></lightning-button>
     </div>
   </div>
-  <!-- move this back to under the export when it's fixed-->
 </template>
