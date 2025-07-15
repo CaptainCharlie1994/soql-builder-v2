@@ -118,25 +118,7 @@ export default class SoqlBuilder extends LightningElement {
   }
   renderedCallback() {
     console.log("✅ soqlBuilder rendered");
-    if (!this.hasRenderedStyles) {
-      setTimeout(() => {
-        const style = document.createElement("style");
-        style.innerText = `
-                ::part(base) .slds-table td,
-                ::part(base) .slds-table th {
-                    border: 1px solid #d8dde6;
-                }
-                ::part(base) .slds-table tr:nth-child(even) {
-                    background-color: #f2f9ff;
-                }
-                ::part(base) .slds-table tr:nth-child(odd) {
-                    background-color: #ffffff;
-                }
-            `;
-        this.template.appendChild(style);
-        this.hasRenderedStyles = true;
-      }, 0); // defer until after DOM stabilizes
-    }
+    
   }
 
   //Wired objects to invoke Apex Classes.
