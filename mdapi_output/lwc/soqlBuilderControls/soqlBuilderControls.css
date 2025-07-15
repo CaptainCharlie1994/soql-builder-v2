@@ -1,0 +1,21 @@
+.query-controls{
+    border-top: 1px solid #add8e6;
+    z-index: 100;
+}
+
+.query-controls lightning-combobox,
+.where-clause-container lightning-combobox {
+  position: relative;
+  z-index: 1000;
+}
+
+/* bump all comboboxes in this component */
+:host lightning-combobox {
+  position: relative;
+  z-index: 9000;
+}
+
+/* and the underlying listbox, just in case */
+:host lightning-combobox .slds-dropdown {
+  z-index: 9001;
+}
