@@ -29,7 +29,7 @@ export default class WhereClauseBuilder extends LightningElement {
     const index = parseInt(event.target.dataset.index, 10);
     const field = event.target.name;
     const value = event.target.value;
-    
+
     this.filters = this.filters.map((f) => ({
       connector: "",
       ...f
@@ -53,6 +53,19 @@ export default class WhereClauseBuilder extends LightningElement {
   }
 
   addFilter() {
+    const last = this.filters[this.filters.length - 1];
+    if (!last.connector) {
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Missing Connector",
+          message:
+            "Please select a connector (AND/OR) before adding a new filter",
+          variant: "warning"
+        })
+      );
+      return;
+    }
+
     this.filters = [...this.filters, createNewFilter()];
     this.dispatchEvent(
       new CustomEvent("addfilter", {

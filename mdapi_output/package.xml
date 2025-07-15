@@ -7,10 +7,16 @@
         <name>ApexClass</name>
     </types>
     <types>
+        <members>debounce</members>
         <members>howToModal</members>
+        <members>listFilterUtils</members>
+        <members>operatorResolver</members>
+        <members>parentFieldManager</members>
+        <members>resultFlattener</members>
         <members>soqlBuilder</members>
         <members>soqlBuilderControls</members>
         <members>whereClauseBuilder</members>
+        <members>whereClauseManager</members>
         <name>LightningComponentBundle</name>
     </types>
     <version>64.0</version>

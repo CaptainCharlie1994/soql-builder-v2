@@ -77,6 +77,7 @@ export default class SoqlBuilder extends LightningElement {
     selectedChildRelFields: {},
 
     // 5) WHERE Clause Filters
+
     filters: [createNewFilter()],
     useAdvancedMode: false,
     rawWhereClause: "",
